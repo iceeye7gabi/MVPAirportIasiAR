@@ -1,0 +1,165 @@
+{
+  "mapName": "Demo Airport Layout",
+  "version": "1.0",
+  "lastUpdated": "2026-06-06",
+  "disclaimer": "This is a simulated layout for demonstration only. It does not represent the real layout of Iași Airport.",
+  "zones": [
+    {
+      "id": "entrance",
+      "name": "Airport Entrance",
+      "description": "The starting point of the demo airport journey.",
+      "type": "public",
+      "position": { "x": 0, "y": 0, "z": 0 }
+    },
+    {
+      "id": "info",
+      "name": "Information Desk",
+      "description": "A public assistance point where passengers can ask for help.",
+      "type": "public",
+      "position": { "x": 0, "y": 0, "z": 5 }
+    },
+    {
+      "id": "checkin",
+      "name": "Check-in Area",
+      "description": "A simulated check-in area for passenger processing.",
+      "type": "public",
+      "position": { "x": 4, "y": 0, "z": 10 }
+    },
+    {
+      "id": "security",
+      "name": "Security Control",
+      "description": "A generic simulated security checkpoint area.",
+      "type": "public",
+      "position": { "x": 4, "y": 0, "z": 16 }
+    },
+    {
+      "id": "cafe",
+      "name": "Cafe",
+      "description": "A simulated cafe area for passengers.",
+      "type": "public",
+      "position": { "x": -4, "y": 0, "z": 10 }
+    },
+    {
+      "id": "toilets",
+      "name": "Toilets",
+      "description": "A simulated public restroom area.",
+      "type": "public",
+      "position": { "x": -4, "y": 0, "z": 16 }
+    },
+    {
+      "id": "gate_a1",
+      "name": "Gate A1",
+      "description": "A fictional boarding gate used for the demo.",
+      "type": "public",
+      "position": { "x": 0, "y": 0, "z": 24 }
+    },
+    {
+      "id": "gate_a2",
+      "name": "Gate A2",
+      "description": "A fictional boarding gate used for the demo.",
+      "type": "public",
+      "position": { "x": 8, "y": 0, "z": 24 }
+    },
+    {
+      "id": "baggage",
+      "name": "Baggage Claim",
+      "description": "A simulated baggage claim area.",
+      "type": "public",
+      "position": { "x": 0, "y": 0, "z": 32 }
+    },
+    {
+      "id": "exit_taxi",
+      "name": "Taxi Exit",
+      "description": "A simulated exit area for taxi pickup.",
+      "type": "public",
+      "position": { "x": 0, "y": 0, "z": 40 }
+    }
+  ],
+  "connections": [
+    {
+      "id": "entrance_info",
+      "from": "entrance",
+      "to": "info",
+      "distance": 5,
+      "status": "open"
+    },
+    {
+      "id": "info_checkin",
+      "from": "info",
+      "to": "checkin",
+      "distance": 7,
+      "status": "open"
+    },
+    {
+      "id": "checkin_security",
+      "from": "checkin",
+      "to": "security",
+      "distance": 6,
+      "status": "open"
+    },
+    {
+      "id": "security_gate_a1",
+      "from": "security",
+      "to": "gate_a1",
+      "distance": 8,
+      "status": "open"
+    },
+    {
+      "id": "security_gate_a2",
+      "from": "security",
+      "to": "gate_a2",
+      "distance": 9,
+      "status": "open"
+    },
+    {
+      "id": "checkin_cafe",
+      "from": "checkin",
+      "to": "cafe",
+      "distance": 8,
+      "status": "open"
+    },
+    {
+      "id": "cafe_toilets",
+      "from": "cafe",
+      "to": "toilets",
+      "distance": 6,
+      "status": "open"
+    },
+    {
+      "id": "toilets_gate_a1",
+      "from": "toilets",
+      "to": "gate_a1",
+      "distance": 10,
+      "status": "open"
+    },
+    {
+      "id": "gate_a1_baggage",
+      "from": "gate_a1",
+      "to": "baggage",
+      "distance": 8,
+      "status": "open"
+    },
+    {
+      "id": "gate_a2_baggage",
+      "from": "gate_a2",
+      "to": "baggage",
+      "distance": 8,
+      "status": "open"
+    },
+    {
+      "id": "baggage_exit_taxi",
+      "from": "baggage",
+      "to": "exit_taxi",
+      "distance": 8,
+      "status": "open"
+    },
+    {
+      "id": "info_toilets",
+      "from": "info",
+      "to": "toilets",
+      "distance": 12,
+      "status": "open"
+    }
+  ],
+  "temporaryMessages": []
+}

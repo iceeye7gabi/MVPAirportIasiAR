@@ -1,0 +1,1041 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage{tcolorbox}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\geometry{margin=2.5cm}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!60!black,
+    urlcolor=blue!60!black,
+    citecolor=blue!60!black
+}
+
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{codeframe}{RGB}{200,200,200}
+\definecolor{primaryblue}{RGB}{31,115,235}
+\definecolor{warningbg}{RGB}{255,248,230}
+\definecolor{warningframe}{RGB}{230,180,60}
+\definecolor{solutionbg}{RGB}{235,245,255}
+\definecolor{solutionframe}{RGB}{31,115,235}
+
+\lstdefinestyle{csharp}{
+    language=[Sharp]C,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{primaryblue}\bfseries,
+    commentstyle=\color{gray},
+    stringstyle=\color{teal!60!black},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=8pt,
+    backgroundcolor=\color{codebg},
+    frame=single,
+    rulecolor=\color{codeframe},
+    breaklines=true,
+    tabsize=4,
+    showstringspaces=false,
+    captionpos=b
+}
+
+\lstdefinestyle{json}{
+    basicstyle=\ttfamily\small,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    backgroundcolor=\color{codebg},
+    frame=single,
+    rulecolor=\color{codeframe},
+    breaklines=true,
+    tabsize=2,
+    captionpos=b
+}
+
+\newtcolorbox{compliancebox}{
+    colback=warningbg,
+    colframe=warningframe,
+    title=\textbf{Compliance Notice},
+    fonttitle=\bfseries,
+    boxrule=0.8pt,
+    arc=3pt
+}
+
+\newtcolorbox{solutionbox}{
+    colback=solutionbg,
+    colframe=solutionframe,
+    title=\textbf{Our Solution},
+    fonttitle=\bfseries,
+    boxrule=0.8pt,
+    arc=3pt
+}
+
+\title{%
+    \textbf{Iași Airport AR Guide --- Demo}\\[0.4em]
+    \large Business Proposition \& Technical Documentation
+}
+\author{MVPAirportIasiAR --- Hackathon MVP}
+\date{June 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This document is structured in two parts. \textbf{Part~I} presents the business proposition: the passenger and airport problem we address, the solution we propose, and what the application delivers for users and stakeholders. \textbf{Part~II} describes the technical implementation for colleagues who need to understand, extend, or demo the codebase. The MVP uses a fictional \emph{Demo Airport Layout} for compliance; it does not represent the real layout of Iași Airport.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% ============================================================
+%  PART I --- BUSINESS PROPOSITION
+% ============================================================
+\part{Business Proposition}
+\label{part:business}
+
+% ------------------------------------------------------------
+\section{Executive Summary}
+% ------------------------------------------------------------
+
+Airports undergoing reconstruction and expansion face a growing challenge: the building layout changes faster than passengers can adapt. Temporary closures, relocated check-in desks, moved gates, and outdated signage create confusion, stress, and wasted time---especially for first-time travellers, elderly passengers, and international visitors.
+
+\textbf{Iași Airport AR Guide --- Demo} is our answer to that problem: a mobile augmented-reality (AR) indoor navigation assistant that helps passengers find their way, while giving airport staff a simple way to update routes when corridors close.
+
+This hackathon MVP demonstrates the \emph{concept} and core user flows. It is not a production deployment, but a convincing prototype that shows how the product could work once connected to an authorized airport indoor map.
+
+% ------------------------------------------------------------
+\section{The Problem}
+% ------------------------------------------------------------
+
+\subsection{Context: Airports Under Change}
+
+Modern airports evolve continuously. Construction zones, phased terminal expansions, and operational adjustments mean that:
+
+\begin{itemize}
+    \item walking routes change from week to week,
+    \item printed maps and static signage become outdated quickly,
+    \item passengers miss flights or arrive late at gates,
+    \item staff spend time giving repetitive directions at information desks,
+    \item the passenger experience suffers during an already stressful journey.
+\end{itemize}
+
+Iași Airport serves as a \emph{conceptual case study} for this challenge: a regional airport in growth that may face layout changes during reconstruction---without this demo using any real internal layout data.
+
+\subsection{Pain Points by Stakeholder}
+
+\begin{table}[H]
+\centering
+\caption{Who is affected and how}
+\begin{tabular}{@{}p{3.2cm}p{10.5cm}@{}}
+\toprule
+\textbf{Stakeholder} & \textbf{Problem today} \\
+\midrule
+Passengers &
+Hard to find check-in, security, gates, restrooms, cafes, and exits when routes change. \\
+Airport staff &
+Must manually redirect passengers when corridors close; no digital tool to broadcast route changes. \\
+Airport management &
+Poor wayfinding hurts satisfaction scores and increases operational pressure during construction. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Why Existing Solutions Fall Short}
+
+Static signage, PDF maps, and generic map apps are not enough because they:
+
+\begin{itemize}
+    \item do not update in real time when a corridor closes,
+    \item do not provide step-by-step guidance in the passenger's language,
+    \item do not overlay directions directly in the physical environment via AR,
+    \item do not combine navigation with a conversational assistant.
+\end{itemize}
+
+% ------------------------------------------------------------
+\section{Our Solution}
+% ------------------------------------------------------------
+
+\begin{solutionbox}
+We built \textbf{Iași Airport AR Guide --- Demo}: a passenger-facing mobile application that combines AR indoor navigation, a bilingual airport assistant chatbot, dynamic route recalculation, and a staff map editor---all running on a safe, simulated airport layout for demonstration purposes.
+\end{solutionbox}
+
+\subsection{What the Application Is}
+
+The app is an \textbf{AR indoor navigation assistant} for airport passengers. On their phone, users can:
+
+\begin{enumerate}[label=\arabic*.]
+    \item choose where they want to go (e.g.\ Gate A1, cafe, baggage claim),
+    \item receive AR arrows and step-by-step instructions on the floor in front of them,
+    \item ask a chatbot questions in Romanian or English,
+    \item take a short guided tour of key airport zones.
+\end{enumerate}
+
+Airport staff can use a separate \textbf{Staff Mode} inside the same app to mark demo corridors as open, closed, or temporarily unavailable. When they do, passenger routes recalculate automatically.
+
+\subsection{What We Are Trying to Solve}
+
+At a high level, the application addresses three connected needs:
+
+\begin{description}
+    \item[Passenger wayfinding] Help people reach public zones quickly and confidently, even when the layout is unfamiliar or recently changed.
+    \item[Operational agility] Allow staff to reflect layout changes digitally without redeploying the entire app.
+    \item[Trust and compliance] Demonstrate the product idea using fictional data only, so the concept can be shown safely before real airport maps are integrated.
+\end{description}
+
+% ------------------------------------------------------------
+\section{What the Application Does}
+% ------------------------------------------------------------
+
+\subsection{For Passengers}
+
+\begin{table}[H]
+\centering
+\caption{Passenger-facing capabilities}
+\begin{tabular}{@{}p{3.5cm}p{10cm}@{}}
+\toprule
+\textbf{Feature} & \textbf{What the user experiences} \\
+\midrule
+AR Navigation &
+Select a destination and follow blue AR arrows with text instructions such as ``Continue toward Security Control''. \\
+Airport Assistant &
+Ask ``Cum ajung la cafenea?'' or ``Where is baggage claim?'' and get a clear answer plus a \textbf{Navigate There} button. \\
+Airport Tour &
+Walk through a guided presentation of key zones (entrance, check-in, security, gates, baggage, taxi exit). \\
+Route Summary &
+See the full path and estimated walking distance before and during navigation. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{For Airport Staff (Demo Mode)}
+
+Staff Mode simulates how operations teams would manage the indoor map in production:
+
+\begin{itemize}
+    \item view all walkable connections in the layout,
+    \item mark a corridor as \textbf{open}, \textbf{closed}, or \textbf{temporary},
+    \item add a temporary message (e.g.\ ``Demo corridor temporarily closed''),
+    \item save changes and immediately affect active passenger routes.
+\end{itemize}
+
+\subsection{End-to-End User Journey}
+
+Figure~\ref{fig:user-journey} shows a typical passenger journey through the app.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    step/.style={draw, rounded corners, minimum width=2.8cm, minimum height=1cm, align=center, fill=blue!8},
+    arrow/.style={-{Stealth[length=2.2mm]}, thick}
+]
+\node[step] (open) {Open app};
+\node[step, right=0.6cm of open] (choose) {Choose destination\\or ask chatbot};
+\node[step, right=0.6cm of choose] (route) {App calculates\\best route};
+\node[step, right=0.6cm of route] (ar) {AR arrows guide\\step by step};
+\node[step, below=1.2cm of route] (staff) {Staff closes\\a corridor};
+\node[step, left=0.6cm of staff] (recalc) {Route\\recalculates};
+
+\draw[arrow] (open) -- (choose);
+\draw[arrow] (choose) -- (route);
+\draw[arrow] (route) -- (ar);
+\draw[arrow] (staff) -- (recalc);
+\draw[arrow] (recalc) -- (route);
+\end{tikzpicture}
+\caption{Passenger journey and dynamic rerouting (business view)}
+\label{fig:user-journey}
+\end{figure}
+
+% ------------------------------------------------------------
+\section{Value Proposition}
+% ------------------------------------------------------------
+
+\subsection{Benefits}
+
+\begin{table}[H]
+\centering
+\caption{Why this solution matters}
+\begin{tabular}{@{}p{4.5cm}p{9cm}@{}}
+\toprule
+\textbf{Benefit} & \textbf{Impact} \\
+\midrule
+Reduced passenger stress &
+Clear AR guidance lowers anxiety in complex, changing environments. \\
+Faster self-service &
+Fewer passengers need to ask staff for basic directions. \\
+Real-time adaptability &
+Closed corridors no longer strand passengers on invalid routes. \\
+Multilingual support &
+Romanian-first chatbot assists local and international travellers. \\
+Low-risk demonstration &
+Fictional demo layout allows hackathon and stakeholder demos without compliance risk. \\
+Future-ready architecture &
+Same product logic can later connect to an authorized real indoor map. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{What Makes Our Approach Different}
+
+Unlike a static map or a generic GPS app, our application is designed specifically for \textbf{indoor airport navigation during layout change}:
+
+\begin{itemize}
+    \item routes are graph-based and recalculate when connections close,
+    \item guidance is visual (AR arrows) and textual (next-step instructions),
+    \item assistance is conversational (chatbot) and actionable (one tap to navigate),
+    \item staff and passengers share the same underlying map model.
+\end{itemize}
+
+% ------------------------------------------------------------
+\section{Compliance and Trust}
+% ------------------------------------------------------------
+
+Because we do not have access to real airport maps or sensitive infrastructure data, the MVP uses a fictional \textbf{Demo Airport Layout}.
+
+\begin{compliancebox}
+The demo does \textbf{not} use or recreate the real layout of Iași Airport. All zones, coordinates, connections, and routes are fictional. Disclaimers are shown throughout the app. This allows us to demonstrate the product idea responsibly while meeting compliance requirements.
+\end{compliancebox}
+
+In a real deployment, the airport would provide an authorized indoor map. Our application architecture is designed so that only the map data layer needs to be replaced---the navigation, chatbot, and staff update logic remain the same.
+
+% ------------------------------------------------------------
+\section{Hackathon Scope: What We Prove}
+% ------------------------------------------------------------
+
+This MVP is intentionally scoped to validate the \emph{idea}, not to ship a production app. At the hackathon we demonstrate that:
+
+\begin{enumerate}[label=\arabic*.]
+    \item A passenger can select a destination and receive AR-style guidance.
+    \item A chatbot can answer common questions and hand off to navigation.
+    \item Staff can close a corridor and the app finds an alternative route.
+    \item The product communicates clearly that the layout is simulated.
+    \item The concept is technically feasible on Unity + AR Foundation (Android).
+\end{enumerate}
+
+The demo layout includes ten public zones (entrance, information desk, check-in, security, cafe, toilets, two gates, baggage claim, taxi exit) connected by twelve fictional walkable paths.
+
+% ------------------------------------------------------------
+\section{Demonstration Scenarios}
+% ------------------------------------------------------------
+
+Table~\ref{tab:demo-flows-business} describes the recommended live demo flows from a presenter perspective.
+
+\begin{table}[H]
+\centering
+\caption{Recommended hackathon demo flows}
+\label{tab:demo-flows-business}
+\begin{tabular}{@{}p{2.8cm}p{10.8cm}@{}}
+\toprule
+\textbf{Scenario} & \textbf{Story to tell} \\
+\midrule
+AR Navigation &
+``A passenger needs Gate A1. They select it and follow AR arrows with step-by-step instructions---all on a simulated layout.'' \\
+Chatbot to Nav &
+``They ask in Romanian how to reach the cafe. The assistant explains and starts navigation with one tap.'' \\
+Dynamic Update &
+``Construction closes a corridor. Staff mark it closed. The passenger's route to Gate A1 automatically reroutes.'' \\
+Compliance &
+``We are asked if this is the real map. The app explains it is simulated for compliance, ready for authorized data later.'' \\
+Airport Tour &
+``First-time travellers can explore what each zone is for before they walk there.'' \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Opening line for any presentation:
+
+\begin{quote}
+\textit{This demo uses a fictional airport layout. It does not represent the real Iași Airport.}
+\end{quote}
+
+% ------------------------------------------------------------
+\section{Vision for Real Deployment}
+% ------------------------------------------------------------
+
+If taken beyond the hackathon, the product roadmap would include:
+
+\begin{enumerate}
+    \item Integration with an \textbf{airport-authorised indoor map} and positioning system.
+    \item Backend sync so staff changes propagate to all passenger devices in real time.
+    \item Flight-aware features (e.g.\ ``Navigate to your gate'' based on boarding pass).
+    \item Analytics for airport operations (congestion, common lost-passenger points).
+    \item Enhanced chatbot connected to approved airport knowledge bases.
+\end{enumerate}
+
+The hackathon MVP proves the core loop---\emph{navigate, assist, update, reroute}---that makes the full product valuable.
+
+% ------------------------------------------------------------
+\section{Business Conclusion}
+% ------------------------------------------------------------
+
+Airports in reconstruction need more than new signs---they need \textbf{digital wayfinding that keeps up with change}. \textbf{Iași Airport AR Guide --- Demo} shows how AR navigation, a passenger chatbot, and staff-controlled map updates can work together as a single product experience.
+
+The problem is real; our application is a concrete, demonstrable response to it. Part~II of this document explains how that response is built in Unity and C\#.
+
+\newpage
+
+% ============================================================
+%  PART II --- TECHNICAL IMPLEMENTATION
+% ============================================================
+\part{Technical Implementation}
+\label{part:technical}
+
+% ------------------------------------------------------------
+\section{Introduction}
+% ------------------------------------------------------------
+
+This part of the document is intended for developers and technical colleagues joining the project. It describes the Unity architecture, data model, pathfinding logic, AR components, and setup instructions. No prior familiarity with the codebase is assumed.
+
+The MVP is built with:
+
+\begin{itemize}
+    \item Unity \textbf{2022.3.62f3} (recommended LTS patch)
+    \item AR Foundation (Android / ARCore)
+    \item C\#
+    \item Local JSON map data
+    \item No external APIs
+\end{itemize}
+
+An \textbf{editor fallback mode} renders the simulated graph in 3D when AR hardware is unavailable, which is essential for hackathon demos without an Android device.
+
+% ------------------------------------------------------------
+\section{High-Level System Overview}
+% ------------------------------------------------------------
+
+The application uses a \textbf{single-scene, multi-panel UI}. At runtime, \texttt{DemoAppBootstrap} constructs the full interface and core services.
+
+\subsection{Main User Modes}
+
+\begin{table}[H]
+\centering
+\caption{Application modes exposed from the main menu}
+\begin{tabular}{@{}llp{7.5cm}@{}}
+\toprule
+\textbf{Mode} & \textbf{Primary script(s)} & \textbf{Purpose} \\
+\midrule
+Main Menu & \texttt{AppController} & Entry point and disclaimer \\
+AR Navigation & \texttt{ARNavigationManager} & Route calculation and guidance \\
+Destination Selection & \texttt{DestinationSelector} & Choose target zone \\
+Chatbot & \texttt{ChatbotManager} & Keyword-based Q\&A \\
+Staff Mode & \texttt{StaffMapEditor} & Edit connection status \\
+Airport Tour & \texttt{AirportTourManager} & Guided zone presentation \\
+About Demo & \texttt{AppController} & Compliance explanation \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Architecture Layers}
+
+Figure~\ref{fig:architecture} shows the logical layering of the system.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    layer/.style={draw, rounded corners, minimum width=11cm, minimum height=1.1cm, align=center, fill=#1},
+    arrow/.style={-{Stealth[length=2.2mm]}, thick}
+]
+\node[layer=blue!10] (ui) {UI Layer: panels, buttons, chat, staff editor, tour};
+\node[layer=green!10, below=0.45cm of ui] (nav) {Navigation Layer: pathfinding, route state, instructions};
+\node[layer=orange!12, below=0.45cm of nav] (map) {Map Layer: JSON loader, graph model, persistence};
+\node[layer=gray!15, below=0.45cm of map] (ar) {Presentation Layer: AR arrows, editor 3D graph fallback};
+
+\draw[arrow] (ui) -- (nav);
+\draw[arrow] (nav) -- (map);
+\draw[arrow] (nav) -- (ar);
+\end{tikzpicture}
+\caption{Logical architecture of the MVP}
+\label{fig:architecture}
+\end{figure}
+
+\subsection{Singleton Services}
+
+Two persistent services are created at startup:
+
+\begin{itemize}
+    \item \texttt{AirportMapLoader} --- loads and saves map JSON.
+    \item \texttt{PathfindingService} --- builds the graph and computes routes.
+\end{itemize}
+
+Shared navigation state is stored in the static class \texttt{AppState}, which allows the chatbot and destination selector to trigger navigation without tight coupling between UI panels.
+
+% ------------------------------------------------------------
+\section{Map Data Model}
+% ------------------------------------------------------------
+
+The simulated airport is represented as a \textbf{graph}:
+
+\begin{itemize}
+    \item \textbf{Nodes} = public zones (entrance, check-in, gates, etc.)
+    \item \textbf{Edges} = walkable connections between zones
+    \item \textbf{Edge cost} = fictional distance in meters
+    \item \textbf{Edge status} = \texttt{open}, \texttt{closed}, or \texttt{temporary}
+\end{itemize}
+
+\subsection{JSON File Location}
+
+\begin{center}
+\texttt{Assets/Resources/Data/demo\_airport\_map.json}
+\end{center}
+
+Unity loads this file through \texttt{Resources.Load<TextAsset>("Data/demo\_airport\_map")}.
+
+\subsection{Schema Overview}
+
+\begin{lstlisting}[style=json,caption={Simplified map JSON structure},label={lst:json-schema}]
+{
+  "mapName": "Demo Airport Layout",
+  "version": "1.0",
+  "lastUpdated": "2026-06-06",
+  "disclaimer": "...",
+  "zones": [
+    {
+      "id": "entrance",
+      "name": "Airport Entrance",
+      "description": "...",
+      "type": "public",
+      "position": { "x": 0, "y": 0, "z": 0 }
+    }
+  ],
+  "connections": [
+    {
+      "id": "entrance_info",
+      "from": "entrance",
+      "to": "info",
+      "distance": 5,
+      "status": "open"
+    }
+  ],
+  "temporaryMessages": []
+}
+\end{lstlisting}
+
+\subsection{Demo Zones}
+
+The default layout contains ten fictional public zones:
+
+\begin{table}[H]
+\centering
+\caption{Zones in the demo layout}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Zone ID} & \textbf{Display Name} \\
+\midrule
+\texttt{entrance} & Airport Entrance \\
+\texttt{info} & Information Desk \\
+\texttt{checkin} & Check-in Area \\
+\texttt{security} & Security Control \\
+\texttt{cafe} & Cafe \\
+\texttt{toilets} & Toilets \\
+\texttt{gate\_a1} & Gate A1 \\
+\texttt{gate\_a2} & Gate A2 \\
+\texttt{baggage} & Baggage Claim \\
+\texttt{exit\_taxi} & Taxi Exit \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Positions (\texttt{x}, \texttt{y}, \texttt{z}) are used for visualization and arrow placement only. They do not represent real-world coordinates.
+
+\subsection{C\# Data Classes}
+
+File: \texttt{Assets/Scripts/Map/AirportMapData.cs}
+
+\begin{itemize}
+    \item \texttt{AirportMapData}
+    \item \texttt{AirportZone}
+    \item \texttt{AirportConnection}
+    \item \texttt{Vector3Data}
+    \item \texttt{TemporaryMapMessage}
+\end{itemize}
+
+Unity's \texttt{JsonUtility} deserializes the JSON into these serializable classes.
+
+% ------------------------------------------------------------
+\section{Map Loading and Persistence}
+% ------------------------------------------------------------
+
+\texttt{AirportMapLoader} is responsible for reading and writing map data.
+
+\subsection{Load Order}
+
+\begin{enumerate}
+    \item On startup, check for a saved file at\\
+    \texttt{Application.persistentDataPath/demo\_airport\_map\_saved.json}
+    \item If present, load the saved map.
+    \item Otherwise, load the default JSON from Resources.
+    \item Raise the \texttt{MapChanged} event so pathfinding and UI refresh.
+\end{enumerate}
+
+\subsection{Staff Persistence}
+
+When staff tap \textbf{Save Map}, the current in-memory map is serialized back to the persistent file. \textbf{Reset to Default} deletes the saved file and reloads the bundled demo JSON.
+
+This design simulates how a future production app could sync map updates from a staff tool, while keeping the MVP fully offline.
+
+% ------------------------------------------------------------
+\section{Graph Construction and Pathfinding}
+% ------------------------------------------------------------
+
+\subsection{AirportGraph}
+
+File: \texttt{Assets/Scripts/Navigation/AirportGraph.cs}
+
+The graph builder:
+
+\begin{itemize}
+    \item indexes zones by \texttt{id},
+    \item stores connections by \texttt{id},
+    \item creates a \textbf{bidirectional adjacency list},
+    \item treats only \texttt{open} and \texttt{temporary} connections as traversable.
+\end{itemize}
+
+When staff change a connection status, the graph rebuilds its adjacency lists while preserving the underlying map objects.
+
+\subsection{PathfindingService}
+
+File: \texttt{Assets/Scripts/Navigation/PathfindingService.cs}
+
+Route calculation uses \textbf{Dijkstra's algorithm} with edge weights equal to connection distance. The service exposes:
+
+\begin{itemize}
+    \item \texttt{FindPath(startZoneId, destinationZoneId)}
+    \item \texttt{SetConnectionStatus(connectionId, status)}
+    \item \texttt{GetConnectionStatus(connectionId)}
+    \item \texttt{RouteRecalculated} event
+\end{itemize}
+
+The result is wrapped in a \texttt{PathResult} object containing:
+
+\begin{itemize}
+    \item ordered list of zone IDs,
+    \item total demo distance,
+    \item human-readable route summary (e.g.\ \emph{Entrance → Information Desk → Gate A1}).
+\end{itemize}
+
+If no route exists, the service returns an empty path and the UI shows:
+
+\begin{quote}
+\textit{No available route in the simulated layout. Please ask airport staff for assistance.}
+\end{quote}
+
+\subsection{Example: Default Route to Gate A1}
+
+Starting from \texttt{entrance}, the default shortest route is:
+
+\begin{center}
+Entrance → Information Desk → Check-in Area → Security Control → Gate A1
+\end{center}
+
+Estimated demo distance: \textbf{36 m}.
+
+\subsection{Example: Rerouting After Staff Edit}
+
+If staff mark connection \texttt{checkin\_security} as \texttt{closed}, the direct path through security is removed. An alternative route becomes available:
+
+\begin{center}
+Entrance → Information Desk → Check-in Area → Cafe → Toilets → Gate A1
+\end{center}
+
+This demonstrates dynamic rerouting during layout changes.
+
+% ------------------------------------------------------------
+\section{AR Navigation and Editor Fallback}
+% ------------------------------------------------------------
+
+\subsection{ARNavigationManager}
+
+File: \texttt{Assets/Scripts/AR/ARNavigationManager.cs}
+
+Responsibilities:
+
+\begin{enumerate}
+    \item accept a destination zone ID,
+    \item default start zone = \texttt{entrance} (via \texttt{AppState}),
+    \item request a route from \texttt{PathfindingService},
+    \item spawn visual guidance,
+    \item display destination, route summary, next step, and distance,
+    \item recalculate automatically when the map changes.
+\end{enumerate}
+
+Step instructions are generated from zone names and relative direction between fictional positions, for example:
+
+\begin{itemize}
+    \item ``Go forward toward Information Desk''
+    \item ``Continue toward Security Control''
+    \item ``You have arrived at Gate A1''
+\end{itemize}
+
+\subsection{ARArrowSpawner}
+
+File: \texttt{Assets/Scripts/AR/ARArrowSpawner.cs}
+
+For each segment of the route, the spawner places primitive 3D arrows slightly above the floor, oriented toward the next waypoint. When the route changes, old arrows are destroyed first.
+
+\subsection{Editor Fallback Mode}
+
+File: \texttt{Assets/Scripts/AR/EditorDemoNavigationView.cs}
+
+When AR is unavailable (Unity Editor or device without configured AR Session), the app:
+
+\begin{itemize}
+    \item renders zones as spheres,
+    \item renders connections as lines,
+    \item highlights the active route in blue,
+    \item still spawns demo arrows along the selected path.
+\end{itemize}
+
+This is critical for hackathon demos when a physical Android device is not available.
+
+% ------------------------------------------------------------
+\section{User Interface Implementation}
+% ------------------------------------------------------------
+
+\subsection{Panel Controller}
+
+\texttt{AppController} switches between panels using an \texttt{AppPanel} enum:
+
+\begin{verbatim}
+MainMenu, Navigation, DestinationSelection,
+Chatbot, StaffMode, AirportTour, About
+\end{verbatim}
+
+\subsection{Runtime Bootstrap}
+
+\texttt{DemoAppBootstrap} programmatically creates:
+
+\begin{itemize}
+    \item Canvas and EventSystem,
+    \item all UI panels and buttons,
+    \item core services,
+    \item navigation world root and demo camera.
+\end{itemize}
+
+This avoids manual scene wiring for the hackathon deadline. A menu item \textbf{Airport AR → Create Main Scene} creates a scene with a single bootstrap GameObject.
+
+\subsection{Destination Selection}
+
+\texttt{DestinationSelector} dynamically builds one button per zone. On selection:
+
+\begin{enumerate}
+    \item compute route from current zone,
+    \item show route preview text,
+    \item call \texttt{AppState.RequestNavigation()},
+    \item open the navigation panel.
+\end{enumerate}
+
+% ------------------------------------------------------------
+\section{Chatbot Module}
+% ------------------------------------------------------------
+
+The chatbot is \textbf{rule-based} and runs entirely on-device.
+
+\subsection{Components}
+
+\begin{itemize}
+    \item \texttt{ChatbotIntent} --- enum of supported intents
+    \item \texttt{ChatbotResponse} --- message + optional navigation target
+    \item \texttt{ChatbotManager} --- keyword matching and UI
+\end{itemize}
+
+\subsection{Behavior}
+
+User input is normalized and matched against Romanian and English keywords. Example intents:
+
+\begin{table}[H]
+\centering
+\caption{Sample chatbot intents}
+\begin{tabular}{@{}p{5.2cm}p{5.2cm}p{3.8cm}@{}}
+\toprule
+\textbf{Example question} & \textbf{Intent} & \textbf{Navigate target} \\
+\midrule
+Unde este check-in-ul? & DirectionsCheckIn & \texttt{checkin} \\
+Cum ajung la securitate? & DirectionsSecurity & \texttt{security} \\
+Unde pot bea o cafea? & DirectionsCafe & \texttt{cafe} \\
+Este aceasta harta reala? & IsRealMap & none \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+When directions are provided, the chatbot:
+
+\begin{enumerate}
+    \item explains the destination in simple language,
+    \item states that the route is simulated,
+    \item shows a \textbf{Navigate There} button.
+\end{enumerate}
+
+No cloud LLM or external API is used.
+
+% ------------------------------------------------------------
+\section{Staff Mode and Airport Tour}
+% ------------------------------------------------------------
+
+\subsection{StaffMapEditor}
+
+Staff can inspect every connection and set status to:
+
+\begin{itemize}
+    \item \texttt{open}
+    \item \texttt{closed}
+    \item \texttt{temporary} (optional message stored in \texttt{temporaryMessages})
+\end{itemize}
+
+Saving triggers:
+
+\begin{itemize}
+    \item JSON persistence,
+    \item graph rebuild,
+    \item active navigation recalculation via events.
+\end{itemize}
+
+\subsection{AirportTourManager}
+
+The tour presents seven narrative stops describing public airport concepts using simulated zones. Each stop includes:
+
+\begin{itemize}
+    \item zone name and description,
+    \item \textbf{Navigate Here} button,
+    \item \textbf{Next Zone} button.
+\end{itemize}
+
+Every description explicitly mentions that the content belongs to the demo layout.
+
+% ------------------------------------------------------------
+\section{Event Flow and Component Interaction}
+% ------------------------------------------------------------
+
+Figure~\ref{fig:sequence} summarizes the navigation flow.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=0.9cm,
+    actor/.style={rectangle, draw, rounded corners, minimum width=2.6cm, minimum height=0.8cm, align=center, fill=blue!8},
+    action/.style={rectangle, draw, dashed, rounded corners, minimum width=8.5cm, minimum height=0.8cm, align=center, fill=gray!8}
+]
+\node[actor] (user) {User / UI};
+\node[action, below=of user] (a1) {Select destination or ask chatbot};
+\node[action, below=of a1] (a2) {AppState.RequestNavigation(zoneId)};
+\node[action, below=of a2] (a3) {PathfindingService.FindPath(start, destination)};
+\node[action, below=of a3] (a4) {ARNavigationManager updates UI + ARArrowSpawner};
+\node[action, below=of a4] (a5) {Staff edits connection -> MapChanged -> recalculate route};
+
+\draw[-{Stealth[length=2mm]}] (user) -- (a1);
+\draw[-{Stealth[length=2mm]}] (a1) -- (a2);
+\draw[-{Stealth[length=2mm]}] (a2) -- (a3);
+\draw[-{Stealth[length=2mm]}] (a3) -- (a4);
+\draw[-{Stealth[length=2mm]}] (a4) -- (a5);
+\end{tikzpicture}
+\caption{Simplified navigation and rerouting flow}
+\label{fig:sequence}
+\end{figure}
+
+Key decoupling mechanism:
+
+\begin{lstlisting}[style=csharp,caption={Shared navigation trigger (AppState.cs)},label={lst:appstate}]
+public static void RequestNavigation(string destinationZoneId)
+{
+    PendingDestinationZoneId = destinationZoneId;
+    NavigationRequested?.Invoke(destinationZoneId);
+}
+\end{lstlisting}
+
+% ------------------------------------------------------------
+\section{Project Structure}
+% ------------------------------------------------------------
+
+\begin{verbatim}
+MVPAirportIasiAR/
+|-- Assets/
+|   |-- Editor/
+|   |   `-- DemoSceneSetup.cs
+|   |-- Resources/Data/
+|   |   `-- demo_airport_map.json
+|   |-- Scripts/
+|   |   |-- AR/
+|   |   |-- Chatbot/
+|   |   |-- Map/
+|   |   |-- Navigation/
+|   |   |-- UI/
+|   |   |-- AppState.cs
+|   |   `-- DemoAppBootstrap.cs
+|   `-- Scenes/                 (created via menu)
+|-- Packages/manifest.json
+|-- ProjectSettings/
+|-- README.md
+|-- DEMO_SCRIPT.md
+`-- TESTING.md
+\end{verbatim}
+
+\subsection{Script Reference}
+
+\begin{longtable}{@{}p{4.5cm}p{9.8cm}@{}}
+\toprule
+\textbf{Script} & \textbf{Responsibility} \\
+\midrule
+\endhead
+\texttt{AirportMapData.cs} & JSON-serializable data models \\
+\texttt{AirportMapLoader.cs} & Load/save map, raise \texttt{MapChanged} \\
+\texttt{AirportGraph.cs} & Graph representation and connection status \\
+\texttt{PathfindingService.cs} & Dijkstra routing service \\
+\texttt{ARNavigationManager.cs} & Navigation orchestration and UI binding \\
+\texttt{ARArrowSpawner.cs} & Route arrow visualization \\
+\texttt{EditorDemoNavigationView.cs} & Editor 3D graph fallback \\
+\texttt{DestinationSelector.cs} & Destination list UI \\
+\texttt{ChatbotManager.cs} & Rule-based assistant \\
+\texttt{StaffMapEditor.cs} & Staff connection editor \\
+\texttt{AirportTourManager.cs} & Guided tour flow \\
+\texttt{ZoneInfoPanel.cs} & Tour zone detail panel \\
+\texttt{AppController.cs} & Panel navigation \\
+\texttt{DemoAppBootstrap.cs} & Runtime UI and systems setup \\
+\texttt{DemoSceneSetup.cs} & Editor menu to create main scene \\
+\bottomrule
+\end{longtable}
+
+% ------------------------------------------------------------
+\section{Setup and Build Instructions}
+% ------------------------------------------------------------
+
+\subsection{Opening the Project}
+
+\begin{enumerate}
+    \item Install Unity \textbf{2022.3.62f3} via Unity Hub.
+    \item Open the repository folder as a Unity project.
+    \item Wait for package restore (AR Foundation, ARCore, XR Management).
+    \item Use menu \textbf{Airport AR → Create Main Scene}.
+    \item Press \textbf{Play} to run the demo in the Editor.
+\end{enumerate}
+
+\subsection{Android / AR Configuration}
+
+\begin{enumerate}
+    \item Switch platform to Android.
+    \item Enable ARCore in \textbf{Project Settings → XR Plug-in Management}.
+    \item Add \textbf{AR Session} and \textbf{XR Origin (Mobile AR)} to the scene.
+    \item Assign AR Session reference on \texttt{ARNavigationManager}.
+    \item Use IL2CPP and ARM64 for release builds.
+    \item Deploy to an ARCore-compatible device.
+\end{enumerate}
+
+\subsection{Dependencies (\texttt{Packages/manifest.json})}
+
+\begin{itemize}
+    \item \texttt{com.unity.xr.arfoundation}
+    \item \texttt{com.unity.xr.arcore}
+    \item \texttt{com.unity.xr.management}
+    \item \texttt{com.unity.ugui}
+\end{itemize}
+
+% ------------------------------------------------------------
+\section{Testing and Debugging}
+% ------------------------------------------------------------
+
+Console logs use consistent prefixes:
+
+\begin{itemize}
+    \item \texttt{[AirportMapLoader]}
+    \item \texttt{[PathfindingService]}
+    \item \texttt{[AirportGraph]}
+    \item \texttt{[ARNavigationManager]}
+    \item \texttt{[ChatbotManager]}
+\end{itemize}
+
+Recommended manual tests:
+
+\begin{enumerate}
+    \item Load default map on startup.
+    \item Navigate from Entrance to Gate A1.
+    \item Close \texttt{checkin\_security} and verify reroute.
+    \item Ask chatbot about cafe and compliance.
+    \item Reset map to default.
+\end{enumerate}
+
+See \texttt{TESTING.md} in the repository for a full checklist.
+
+% ------------------------------------------------------------
+\section{Future Production Path (Technical View)}
+% ------------------------------------------------------------
+
+The MVP intentionally separates \textbf{data} from \textbf{logic}:
+
+\begin{enumerate}
+    \item Replace \texttt{demo\_airport\_map.json} with authorized indoor map data using the same schema.
+    \item Keep loader, graph, and pathfinding modules unchanged.
+    \item Replace editor fallback visualization with real indoor positioning (beacons, SLAM, or VPS).
+    \item Connect staff editor to a secured backend instead of local JSON files.
+    \item Upgrade chatbot from keyword rules to approved airport knowledge sources.
+\end{enumerate}
+
+This allows the hackathon prototype to evolve into a compliant production system without rewriting the navigation core.
+
+% ------------------------------------------------------------
+\section{Technical Conclusion}
+% ------------------------------------------------------------
+
+The \emph{Iași Airport AR Guide --- Demo} demonstrates how AR indoor navigation could support passengers during airport reconstruction while respecting strict data compliance requirements. The implementation is modular, offline-friendly, and hackathon-ready:
+
+\begin{itemize}
+    \item fictional graph-based map data,
+    \item Dijkstra route planning with dynamic edge blocking,
+    \item AR and editor visualization paths,
+    \item bilingual rule-based chatbot,
+    \item staff-controlled map updates,
+    \item guided tour and compliance messaging.
+\end{itemize}
+
+Colleagues joining the project should start by opening the scene, pressing Play, and tracing one navigation request from UI selection through \texttt{PathfindingService} to arrow spawning. That single end-to-end path provides the best mental model for the rest of the codebase.
+
+% ============================================================
+\appendix
+\section{Default Demo Connections}
+% ============================================================
+
+\begin{table}[H]
+\centering
+\caption{Connections in the default demo map}
+\small
+\begin{tabular}{@{}lllrr@{}}
+\toprule
+\textbf{ID} & \textbf{From} & \textbf{To} & \textbf{Dist.} & \textbf{Status} \\
+\midrule
+\texttt{entrance\_info} & entrance & info & 5 & open \\
+\texttt{info\_checkin} & info & checkin & 7 & open \\
+\texttt{checkin\_security} & checkin & security & 6 & open \\
+\texttt{security\_gate\_a1} & security & gate\_a1 & 8 & open \\
+\texttt{security\_gate\_a2} & security & gate\_a2 & 9 & open \\
+\texttt{checkin\_cafe} & checkin & cafe & 8 & open \\
+\texttt{cafe\_toilets} & cafe & toilets & 6 & open \\
+\texttt{toilets\_gate\_a1} & toilets & gate\_a1 & 10 & open \\
+\texttt{gate\_a1\_baggage} & gate\_a1 & baggage & 8 & open \\
+\texttt{gate\_a2\_baggage} & gate\_a2 & baggage & 8 & open \\
+\texttt{baggage\_exit\_taxi} & baggage & exit\_taxi & 8 & open \\
+\texttt{info\_toilets} & info & toilets & 12 & open \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Glossary}
+
+\begin{description}
+    \item[MVP] Minimum Viable Product --- functional prototype, not production-ready.
+    \item[AR Foundation] Unity package for cross-platform AR features.
+    \item[ARCore] Google's AR platform for Android.
+    \item[Zone] A public location node in the simulated graph.
+    \item[Connection] An edge representing a walkable path between two zones.
+    \item[Editor Fallback] Non-AR visualization mode for Unity Editor demos.
+\end{description}
+
+\end{document}
