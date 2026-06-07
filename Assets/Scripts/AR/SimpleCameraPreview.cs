@@ -14,6 +14,10 @@ namespace AirportAR.AR
 
         WebCamTexture webcam;
         bool running;
+        bool pausedForSpeech;
+        bool isFrontFacing;
+
+        public bool IsRunning => running;
 
         public void StartPreview()
         {
@@ -31,6 +35,37 @@ namespace AirportAR.AR
             StopAllCoroutines();
             StopWebCam();
             SetStatus(string.Empty);
+        }
+
+        public void SetPreviewVisible(bool visible)
+        {
+            if (previewImage != null)
+            {
+                previewImage.gameObject.SetActive(visible);
+            }
+        }
+
+        public void PauseForSpeech()
+        {
+            if (webcam == null || !webcam.isPlaying || pausedForSpeech)
+            {
+                return;
+            }
+
+            webcam.Pause();
+            pausedForSpeech = true;
+        }
+
+        public void ResumeAfterSpeech()
+        {
+            if (webcam == null || !pausedForSpeech)
+            {
+                return;
+            }
+
+            webcam.Play();
+            pausedForSpeech = false;
+            ApplyRotation();
         }
 
         IEnumerator StartPreviewRoutine()
@@ -59,8 +94,9 @@ namespace AirportAR.AR
                 yield break;
             }
 
-            string deviceName = PickRearCamera(devices);
-            webcam = new WebCamTexture(deviceName, 1280, 720, 30);
+            WebCamDevice device = PickRearCamera(devices);
+            isFrontFacing = device.isFrontFacing;
+            webcam = new WebCamTexture(device.name, 1280, 720, 30);
             previewImage.texture = webcam;
             previewImage.color = Color.white;
             webcam.Play();
@@ -84,17 +120,17 @@ namespace AirportAR.AR
             SetStatus(string.Empty);
         }
 
-        static string PickRearCamera(WebCamDevice[] devices)
+        static WebCamDevice PickRearCamera(WebCamDevice[] devices)
         {
             foreach (WebCamDevice device in devices)
             {
                 if (!device.isFrontFacing)
                 {
-                    return device.name;
+                    return device;
                 }
             }
 
-            return devices[0].name;
+            return devices[0];
         }
 
         void ApplyRotation()
@@ -105,34 +141,53 @@ namespace AirportAR.AR
             }
 
             RectTransform rect = previewImage.rectTransform;
-            float rotation = -webcam.videoRotationAngle;
-            rect.localEulerAngles = new Vector3(0f, 0f, rotation);
-
-            bool vertical = Mathf.Abs(rotation) == 90f || Mathf.Abs(rotation) == 270f;
-            float ratio = vertical
-                ? (float)webcam.width / webcam.height
-                : (float)webcam.height / webcam.width;
-
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
+            rect.localScale = Vector3.one;
+            rect.localEulerAngles = new Vector3(0f, 0f, -webcam.videoRotationAngle);
 
-            if (ratio > (float)Screen.width / Screen.height)
+            // Fix left-right mirror on rear camera using UV flip (keeps correct orientation).
+            if (webcam.videoVerticallyMirrored)
             {
-                float width = ratio / ((float)Screen.width / Screen.height);
-                rect.localScale = new Vector3(width, 1f, 1f);
+                previewImage.uvRect = new Rect(0f, 1f, 1f, -1f);
+            }
+            else if (!isFrontFacing)
+            {
+                previewImage.uvRect = new Rect(1f, 0f, -1f, 1f);
             }
             else
             {
-                float height = ((float)Screen.width / Screen.height) / ratio;
-                rect.localScale = new Vector3(1f, height, 1f);
+                previewImage.uvRect = new Rect(0f, 0f, 1f, 1f);
             }
+
+            int angle = webcam.videoRotationAngle;
+            bool vertical = angle == 90 || angle == 270;
+            float ratio = vertical
+                ? (float)webcam.width / webcam.height
+                : (float)webcam.height / webcam.width;
+
+            float screenRatio = (float)Screen.width / Screen.height;
+            float fitX = 1f;
+            float fitY = 1f;
+
+            if (ratio > screenRatio)
+            {
+                fitX = ratio / screenRatio;
+            }
+            else
+            {
+                fitY = screenRatio / ratio;
+            }
+
+            rect.localScale = new Vector3(fitX, fitY, 1f);
         }
 
         void StopWebCam()
         {
             running = false;
+            pausedForSpeech = false;
             if (webcam != null)
             {
                 if (webcam.isPlaying)
@@ -147,6 +202,9 @@ namespace AirportAR.AR
             if (previewImage != null)
             {
                 previewImage.texture = null;
+                previewImage.uvRect = new Rect(0f, 0f, 1f, 1f);
+                previewImage.rectTransform.localEulerAngles = Vector3.zero;
+                previewImage.rectTransform.localScale = Vector3.one;
             }
         }
 

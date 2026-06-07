@@ -76,6 +76,21 @@ namespace AirportAR.Editor
             return true;
         }
 
+        [MenuItem("Airport AR/Fix XR Plug-in Management (iOS=ARKit, Android=ARCore)")]
+        public static void FixXrPluginManagement()
+        {
+            MobileARProjectConfigurator.ApplyAndroidSettings();
+            MobileARProjectConfigurator.ApplyIosSettings();
+            AssetDatabase.SaveAssets();
+            EditorUtility.DisplayDialog(
+                "XR Plug-in Management Fixed",
+                "Configured loaders:\n\n" +
+                "• iOS tab → Apple ARKit only\n" +
+                "• Android tab → Google ARCore only\n\n" +
+                "Open Project Settings → XR Plug-in Management and verify the iOS tab (Apple icon), NOT the Android tab.",
+                "OK");
+        }
+
         [MenuItem(MenuDiagnose)]
         public static void DiagnoseIosBuildSupport()
         {
@@ -83,22 +98,65 @@ namespace AirportAR.Editor
             string iosSupport = GetIosSupportPath();
             bool iosInstalled = IsIosBuildSupportInstalled();
             string version = Application.unityVersion;
+            DiagnoseXcodeToolchain(out string xcodeSelectPath, out bool actoolAvailable, out string xcodeAppPath);
 
             string message =
                 $"Unity version: {version}\n\n" +
                 $"PlaybackEngines:\n{playbackEngines}\n\n" +
                 $"iOS support path:\n{iosSupport}\n\n" +
                 $"iOS module present: {iosInstalled}\n\n" +
+                $"xcode-select path:\n{xcodeSelectPath}\n\n" +
+                $"Xcode.app: {(string.IsNullOrEmpty(xcodeAppPath) ? "NOT FOUND" : xcodeAppPath)}\n\n" +
+                $"actool available: {actoolAvailable}\n\n" +
                 (iosInstalled
-                    ? "iOS Build Support is present. Switch Platform should work."
+                    ? "iOS Build Support is present. Switch Platform should work.\n\n"
                     : "iOS Build Support is MISSING.\n\n" +
                       "Unity Hub often marks it installed without copying files.\n" +
                       "Run: ./scripts/install_ios_module.sh\n\n" +
                       "Note: the official .pkg expects legacy /Applications/Unity/Unity.app " +
-                      "and fails silently on Hub installs.");
+                      "and fails silently on Hub installs.\n\n") +
+                (!actoolAvailable
+                    ? "ARKit iOS builds need full Xcode (not just Command Line Tools).\n\n" +
+                      "Fix in Terminal:\n" +
+                      "1. Install Xcode from the App Store\n" +
+                      "2. Open Xcode once and accept the license\n" +
+                      "3. sudo xcode-select -s /Applications/Xcode.app/Contents/Developer\n" +
+                      "4. xcrun --find actool\n"
+                    : "Xcode toolchain looks OK for ARKit iOS builds.");
 
-            Debug.Log($"[PlatformTools] Diagnosis: iOSPlayer={iosInstalled}, version={version}");
+            Debug.Log($"[PlatformTools] Diagnosis: iOSPlayer={iosInstalled}, actool={actoolAvailable}, xcode={xcodeSelectPath}");
             EditorUtility.DisplayDialog("iOS Build Support Diagnosis", message, "OK");
+        }
+
+        static void DiagnoseXcodeToolchain(out string xcodeSelectPath, out bool actoolAvailable, out string xcodeAppPath)
+        {
+            xcodeSelectPath = RunShell("xcode-select -p");
+            actoolAvailable = !string.IsNullOrEmpty(RunShell("xcrun --find actool 2>/dev/null"));
+            xcodeAppPath = Directory.Exists("/Applications/Xcode.app")
+                ? "/Applications/Xcode.app"
+                : string.Empty;
+        }
+
+        static string RunShell(string command)
+        {
+            try
+            {
+                var process = new System.Diagnostics.Process();
+                process.StartInfo.FileName = "/bin/zsh";
+                process.StartInfo.Arguments = $"-lc \"{command}\"";
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
+                process.Start();
+                string output = process.StandardOutput.ReadToEnd().Trim();
+                process.WaitForExit(5000);
+                return output;
+            }
+            catch (System.Exception ex)
+            {
+                return $"error: {ex.Message}";
+            }
         }
 
         [MenuItem(MenuSetupXr)]

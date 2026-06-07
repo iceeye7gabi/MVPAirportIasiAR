@@ -14,6 +14,9 @@ namespace AirportAR.Editor
         const string CameraUsageText =
             "Aplicatia foloseste camera pentru a explora imprejurimile in modul Descopera aeroportul.";
 
+        const string MicrophoneUsageText =
+            "Microfonul este necesar pentru comenzi vocale in modul Descopera aeroportul.";
+
         [MenuItem("Airport AR/Configure Android AR Build")]
         public static void ConfigureAndroidFromMenu()
         {
@@ -40,7 +43,8 @@ namespace AirportAR.Editor
                 "- Min iOS 13\n" +
                 "- Camera usage description\n" +
                 "- Portrait\n\n" +
-                "Also enable ARKit in Project Settings > XR Plug-in Management > iOS.\n\n" +
+                "Also enable ARKit on the **iOS tab** (Apple icon) in Project Settings > XR Plug-in Management — NOT the Android tab.\n\n" +
+                "Run menu: Airport AR → Fix XR Plug-in Management.\n\n" +
                 "Build to Xcode, sign with your Apple ID, then run on iPhone.",
                 "OK");
         }
@@ -114,6 +118,12 @@ namespace AirportAR.Editor
                 cameraUsage.stringValue = CameraUsageText;
             }
 
+            SerializedProperty microphoneUsage = so.FindProperty("microphoneUsageDescription");
+            if (microphoneUsage != null)
+            {
+                microphoneUsage.stringValue = MicrophoneUsageText;
+            }
+
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -136,25 +146,44 @@ namespace AirportAR.Editor
                 return;
             }
 
-            bool loaderFound = false;
-            foreach (XRLoader loader in managerSettings.loaders)
+            string loaderPath = loaderKeyword == "arkit"
+                ? "Assets/XR/Loaders/ARKitLoader.asset"
+                : "Assets/XR/Loaders/ARCoreLoader.asset";
+
+            var loader = AssetDatabase.LoadAssetAtPath<XRLoader>(loaderPath);
+            if (loader == null)
             {
-                if (loader != null && loader.name.ToLowerInvariant().Contains(loaderKeyword))
+                Debug.LogWarning($"[MobileARProjectConfigurator] Missing loader asset: {loaderPath}");
+                return;
+            }
+
+            for (int i = managerSettings.loaders.Count - 1; i >= 0; i--)
+            {
+                XRLoader existing = managerSettings.loaders[i];
+                if (existing == null || existing != loader)
                 {
-                    loaderFound = true;
+                    managerSettings.TryRemoveLoader(existing);
+                }
+            }
+
+            bool hasLoader = false;
+            foreach (XRLoader assigned in managerSettings.loaders)
+            {
+                if (assigned == loader)
+                {
+                    hasLoader = true;
                     break;
                 }
             }
 
-            if (!loaderFound)
+            if (!hasLoader)
             {
-                Debug.LogWarning(
-                    $"[MobileARProjectConfigurator] Add {loaderKeyword.ToUpperInvariant()} Loader in " +
-                    $"Project Settings > XR Plug-in Management > {targetGroup}.");
+                managerSettings.TryAddLoader(loader);
             }
 
             generalSettings.InitManagerOnStart = true;
             EditorUtility.SetDirty(generalSettings);
+            EditorUtility.SetDirty(managerSettings);
         }
     }
 }

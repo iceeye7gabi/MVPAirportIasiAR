@@ -9,6 +9,12 @@ namespace AirportAR.Chatbot
     /// </summary>
     public class ChatbotManager : MonoBehaviour
     {
+        const string WelcomeMessage =
+            "Bun venit! Alege o întrebare sau scrie tu. " +
+            "Pot răspunde despre Aeroportul Internațional Iași și despre această aplicație demo.";
+
+        const int MaxChatEntries = 8;
+
         [SerializeField] Text chatHistoryText;
         [SerializeField] InputField inputField;
         [SerializeField] Button sendButton;
@@ -23,6 +29,11 @@ namespace AirportAR.Chatbot
             "Ce cod IATA are aeroportul?",
             "Cum ajung în centrul Iașiului?",
             "Ce facilități are aeroportul?",
+            "Există parcare la aeroport?",
+            "Cât timp înainte trebuie să ajung?",
+            "Unde fac check-in?",
+            "Există Wi-Fi gratuit?",
+            "Ce zboruri sunt din Iași?",
             "Ce este această aplicație?"
         };
 
@@ -34,9 +45,7 @@ namespace AirportAR.Chatbot
             }
 
             BuildSuggestedQuestions();
-            AppendBotMessage(
-                "Bun venit! Alege o întrebare sau scrie tu. " +
-                "Pot răspunde despre Aeroportul Internațional Iași și despre această aplicație demo.");
+            ResetConversation(false);
         }
 
         void BuildSuggestedQuestions()
@@ -88,10 +97,14 @@ namespace AirportAR.Chatbot
             text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             text.color = new Color(0.15f, 0.2f, 0.3f);
             text.alignment = TextAnchor.MiddleLeft;
-            text.fontSize = 18;
+            text.fontSize = 22;
 
             var rect = go.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(0f, 48f);
+            rect.sizeDelta = new Vector2(0f, 56f);
+
+            var layout = go.AddComponent<LayoutElement>();
+            layout.preferredHeight = 56f;
+            layout.minHeight = 56f;
 
             var textRect = textGo.GetComponent<RectTransform>();
             textRect.anchorMin = Vector2.zero;
@@ -164,7 +177,28 @@ namespace AirportAR.Chatbot
                     "Programul zborurilor se schimbă sezonier — verifică site-ul oficial al aeroportului sau al companiilor aeriene pentru ore actualizate.";
             }
 
-            if (ContainsAny(text, "check-in", "checkin", "bagaj", "security", "securitate"))
+            if (ContainsAny(text, "parcare", "park", "masina", "mașină", "auto"))
+            {
+                return
+                    "Aeroportul Iași dispune de parcare pentru pasageri. Tarifele și capacitatea pot varia — " +
+                    "verifică informațiile actualizate pe site-ul oficial al aeroportului.";
+            }
+
+            if (ContainsAny(text, "cat timp", "cât timp", "cat de devreme", "cât de devreme", "ora", "inainte de zbor", "înainte de zbor"))
+            {
+                return
+                    "Pentru zboruri externe recomandăm sosirea cu cel puțin 2 ore înainte. " +
+                    "Pentru zboruri interne, de obicei 90 de minute sunt suficiente, dar verifică indicațiile companiei aeriene.";
+            }
+
+            if (ContainsAny(text, "wifi", "wi-fi", "internet"))
+            {
+                return
+                    "Aeroportul oferă acces Wi-Fi pentru pasageri. Disponibilitatea și condițiile pot varia — " +
+                    "detaliile actualizate sunt pe site-ul oficial al aeroportului.";
+            }
+
+            if (ContainsAny(text, "check-in", "checkin", "bagaj", "security", "securitate", "ghiseu", "ghișeu"))
             {
                 return
                     "Check-in-ul se face la ghișeele companiilor aeriene sau online, înainte de sosire. " +
@@ -227,9 +261,28 @@ namespace AirportAR.Chatbot
 
         void RefreshChatHistory()
         {
+            if (chatLines.Count > MaxChatEntries)
+            {
+                ResetConversation(true);
+                return;
+            }
+
             if (chatHistoryText != null)
             {
                 chatHistoryText.text = string.Join("\n\n", chatLines);
+            }
+        }
+
+        void ResetConversation(bool showRestartNotice)
+        {
+            chatLines.Clear();
+            AppendBotMessage(WelcomeMessage);
+
+            if (showRestartNotice && chatHistoryText != null)
+            {
+                chatHistoryText.text =
+                    "Conversația a fost resetată pentru a rămâne ușor de citit.\n\n" +
+                    chatHistoryText.text;
             }
         }
     }

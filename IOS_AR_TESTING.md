@@ -152,6 +152,8 @@ Same flow as Android:
 | Problem | Solution |
 |---------|----------|
 | Unity missing iOS module | Unity Hub → Installs → Add **iOS Build Support** |
+| **`actool` not found / exit code 72** | Mac points to Command Line Tools only. Install **full Xcode** from App Store, open it once, then run `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` and verify with `xcrun --find actool`. Menu **Airport AR → Diagnose iOS Build Support** shows status. |
+| Xcode PIF transfer session error | Quit Xcode, run `killall XCBBuildService`, reopen and **Clean Build Folder** (Shift+Cmd+K) |
 | Xcode signing error | Unique Bundle ID + Automatic signing + Apple ID team |
 | “Untrusted Developer” on iPhone | Settings → General → VPN & Device Management → Trust |
 | Black camera view | Allow camera permission; restart app |

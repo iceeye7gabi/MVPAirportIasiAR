@@ -1,16 +1,20 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace AirportAR.AR
 {
     /// <summary>
-    /// Opens the phone camera so the user can look around.
+    /// Opens the device camera for discover mode (static preview, no AR planes).
     /// </summary>
     public class AirportDiscoverController : MonoBehaviour
     {
         [SerializeField] SimpleCameraPreview cameraPreview;
+        [SerializeField] DiscoverVoiceAssistant voiceAssistant;
         [SerializeField] Text hintText;
         [SerializeField] GameObject editorPlaceholder;
+
+        Coroutine discoverRoutine;
 
         public void OnDiscoverShown()
         {
@@ -23,18 +27,53 @@ namespace AirportAR.AR
 
             if (!onDevice)
             {
-                SetHint("Modul cameră funcționează pe iPhone sau Android.", false);
+                SetHint("Atinge ecranul pentru informații vocale despre aeroport (simulare Editor).", false);
+                cameraPreview?.SetPreviewVisible(true);
                 cameraPreview?.StopPreview();
+                voiceAssistant?.OnDiscoverActivated();
                 return;
             }
 
-            SetHint("Privește împrejurimile prin cameră.", true);
-            cameraPreview?.StartPreview();
+            if (discoverRoutine != null)
+            {
+                StopCoroutine(discoverRoutine);
+            }
+
+            discoverRoutine = StartCoroutine(StartDiscoverRoutine());
         }
 
         public void OnDiscoverHidden()
         {
+            if (discoverRoutine != null)
+            {
+                StopCoroutine(discoverRoutine);
+                discoverRoutine = null;
+            }
+
             cameraPreview?.StopPreview();
+            cameraPreview?.SetPreviewVisible(true);
+            voiceAssistant?.OnDiscoverDeactivated();
+        }
+
+        IEnumerator StartDiscoverRoutine()
+        {
+            cameraPreview?.SetPreviewVisible(true);
+            cameraPreview?.StartPreview();
+            SetHint("Pornesc camera...", true);
+
+            if (!Application.HasUserAuthorization(UserAuthorization.WebCam))
+            {
+                yield return Application.RequestUserAuthorization(UserAuthorization.WebCam);
+            }
+
+            SetHint(
+                "Atinge ecranul → bun venit și săgeți.\n" +
+                "Rotește telefonul stânga/dreapta pentru o direcție.\n" +
+                "Atinge săgeata pentru informații vocale.",
+                true);
+
+            voiceAssistant?.OnDiscoverActivated();
+            discoverRoutine = null;
         }
 
         void SetHint(string message, bool onCamera)

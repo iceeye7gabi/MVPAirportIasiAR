@@ -143,10 +143,10 @@ PlayerSettings:
   tvOSBundleVersion: 1.0
   bundleVersion: 1.0
   preloadedAssets:
-  - {fileID: 4800000, guid: e7c77f6eaab324a819efdc13b8125a39, type: 3}
-  - {fileID: 4800000, guid: 6743a50a812740be8c0aa3fccc46fae9, type: 3}
   - {fileID: -1502060608424411025, guid: 715a3e935214645ad82eecb4dc5721e6, type: 2}
   - {fileID: 11400000, guid: 8a5678c348d1741e99a9ffc5871239e1, type: 2}
+  - {fileID: 4800000, guid: e7c77f6eaab324a819efdc13b8125a39, type: 3}
+  - {fileID: 4800000, guid: 6743a50a812740be8c0aa3fccc46fae9, type: 3}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -421,7 +421,8 @@ PlayerSettings:
   cameraUsageDescription: Aplicatia foloseste camera pentru a explora imprejurimile
     in modul Descopera aeroportul.
   locationUsageDescription: 
-  microphoneUsageDescription: 
+  microphoneUsageDescription: Microfonul este necesar pentru comenzi vocale in modul
+    Descopera aeroportul.
   bluetoothUsageDescription: 
   macOSTargetOSVersion: 10.13.0
   switchNMETAOverride: 
@@ -672,7 +673,7 @@ PlayerSettings:
   webGLMemoryGeometricGrowthCap: 96
   webGLPowerPreference: 2
   scriptingDefineSymbols:
-    iPhone: UNITY_XR_ARKIT_LOADER_ENABLED
+    iPhone: UNITY_XR_ARKIT_LOADER_ENABLED;UNITY_XR_ARKIT_FACE_TRACKING_ENABLED
   additionalCompilerArguments: {}
   platformArchitecture:
     iPhone: 1

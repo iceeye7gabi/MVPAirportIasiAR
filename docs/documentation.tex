@@ -16,7 +16,6 @@
 \usepackage{tcolorbox}
 \usepackage{float}
 \usepackage{caption}
-\usepackage{subcaption}
 
 \geometry{margin=2.5cm}
 \hypersetup{
@@ -29,10 +28,14 @@
 \definecolor{codebg}{RGB}{245,245,245}
 \definecolor{codeframe}{RGB}{200,200,200}
 \definecolor{primaryblue}{RGB}{31,115,235}
+\definecolor{brandgreen}{RGB}{130,195,65}
+\definecolor{branddark}{RGB}{25,45,85}
 \definecolor{warningbg}{RGB}{255,248,230}
 \definecolor{warningframe}{RGB}{230,180,60}
 \definecolor{solutionbg}{RGB}{235,245,255}
 \definecolor{solutionframe}{RGB}{31,115,235}
+\definecolor{techbg}{RGB}{240,248,255}
+\definecolor{techframe}{RGB}{31,115,235}
 
 \lstdefinestyle{csharp}{
     language=[Sharp]C,
@@ -50,18 +53,6 @@
     breaklines=true,
     tabsize=4,
     showstringspaces=false,
-    captionpos=b
-}
-
-\lstdefinestyle{json}{
-    basicstyle=\ttfamily\small,
-    numbers=left,
-    numberstyle=\tiny\color{gray},
-    backgroundcolor=\color{codebg},
-    frame=single,
-    rulecolor=\color{codeframe},
-    breaklines=true,
-    tabsize=2,
     captionpos=b
 }
 
@@ -83,11 +74,20 @@
     arc=3pt
 }
 
-\title{%
-    \textbf{Iași Airport AR Guide --- Demo}\\[0.4em]
-    \large Business Proposition \& Technical Documentation
+\newtcolorbox{techbox}{
+    colback=techbg,
+    colframe=techframe,
+    title=\textbf{Technical Highlight},
+    fonttitle=\bfseries,
+    boxrule=0.8pt,
+    arc=3pt
 }
-\author{MVPAirportIasiAR --- Hackathon MVP}
+
+\title{%
+    \textbf{Iași Airport Digital Guide --- Hackathon MVP}\\[0.4em]
+    \large Business Proposition \& Technical Architecture
+}
+\author{MVPAirportIasiAR Team --- Iași Air Hackathon 2026}
 \date{June 2026}
 
 \begin{document}
@@ -95,7 +95,7 @@
 \maketitle
 
 \begin{abstract}
-This document is structured in two parts. \textbf{Part~I} presents the business proposition: the passenger and airport problem we address, the solution we propose, and what the application delivers for users and stakeholders. \textbf{Part~II} describes the technical implementation for colleagues who need to understand, extend, or demo the codebase. The MVP uses a fictional \emph{Demo Airport Layout} for compliance; it does not represent the real layout of Iași Airport.
+\textbf{Part~I} presents the passenger problem, our product vision, and what the demo delivers today for users and airport stakeholders. \textbf{Part~II} documents the Unity/C\# architecture for technical jury evaluation: modular runtime UI, Discover mode (camera, spatial direction overlay, voice guidance), on-device FAQ assistant, AR Foundation integration layer, and extension modules for graph-based indoor navigation. The MVP uses a fictional \emph{Demo Airport Layout} where required for compliance; Discover-mode directional hints are orientative and do not represent the real terminal geometry of Iași Airport.
 \end{abstract}
 
 \tableofcontents
@@ -107,283 +107,170 @@ This document is structured in two parts. \textbf{Part~I} presents the business 
 \part{Business Proposition}
 \label{part:business}
 
-% ------------------------------------------------------------
 \section{Executive Summary}
-% ------------------------------------------------------------
 
-Airports undergoing reconstruction and expansion face a growing challenge: the building layout changes faster than passengers can adapt. Temporary closures, relocated check-in desks, moved gates, and outdated signage create confusion, stress, and wasted time---especially for first-time travellers, elderly passengers, and international visitors.
+Airports in expansion and reconstruction need digital tools that keep pace with changing layouts. Passengers---especially first-time visitors and international travellers---need immediate, intuitive guidance in Romanian, without downloading complex maps or asking staff for every turn.
 
-\textbf{Iași Airport AR Guide --- Demo} is our answer to that problem: a mobile augmented-reality (AR) indoor navigation assistant that helps passengers find their way, while giving airport staff a simple way to update routes when corridors close.
+\textbf{Iași Airport Digital Guide} is a mobile passenger assistant prototype that combines:
 
-This hackathon MVP demonstrates the \emph{concept} and core user flows. It is not a production deployment, but a convincing prototype that shows how the product could work once connected to an authorized airport indoor map.
+\begin{itemize}[noitemsep]
+    \item \textbf{Discover mode} --- live camera view, gyroscopic direction overlay, and spoken guidance in Romanian;
+    \item \textbf{FAQ assistant} --- instant answers about Iași Airport services, entirely on-device;
+    \item \textbf{AR-ready architecture} --- Unity AR Foundation + native iOS audio plugins, prepared for floor-anchored navigation in the next iteration.
+\end{itemize}
 
-% ------------------------------------------------------------
+This hackathon MVP demonstrates a credible product direction for Aeroportul Internațional Iași: a single app that \emph{shows, tells, and guides}---not just a static brochure.
+
 \section{The Problem}
-% ------------------------------------------------------------
 
-\subsection{Context: Airports Under Change}
+\subsection{Context}
 
-Modern airports evolve continuously. Construction zones, phased terminal expansions, and operational adjustments mean that:
-
-\begin{itemize}
-    \item walking routes change from week to week,
-    \item printed maps and static signage become outdated quickly,
-    \item passengers miss flights or arrive late at gates,
-    \item staff spend time giving repetitive directions at information desks,
-    \item the passenger experience suffers during an already stressful journey.
-\end{itemize}
-
-Iași Airport serves as a \emph{conceptual case study} for this challenge: a regional airport in growth that may face layout changes during reconstruction---without this demo using any real internal layout data.
-
-\subsection{Pain Points by Stakeholder}
-
-\begin{table}[H]
-\centering
-\caption{Who is affected and how}
-\begin{tabular}{@{}p{3.2cm}p{10.5cm}@{}}
-\toprule
-\textbf{Stakeholder} & \textbf{Problem today} \\
-\midrule
-Passengers &
-Hard to find check-in, security, gates, restrooms, cafes, and exits when routes change. \\
-Airport staff &
-Must manually redirect passengers when corridors close; no digital tool to broadcast route changes. \\
-Airport management &
-Poor wayfinding hurts satisfaction scores and increases operational pressure during construction. \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Why Existing Solutions Fall Short}
-
-Static signage, PDF maps, and generic map apps are not enough because they:
+During terminal works and operational changes, passengers face:
 
 \begin{itemize}
-    \item do not update in real time when a corridor closes,
-    \item do not provide step-by-step guidance in the passenger's language,
-    \item do not overlay directions directly in the physical environment via AR,
-    \item do not combine navigation with a conversational assistant.
+    \item unfamiliar walking routes and relocated services;
+    \item outdated static signage;
+    \item language barriers at information desks;
+    \item stress when searching for check-in, security, food, or restrooms under time pressure.
 \end{itemize}
 
-% ------------------------------------------------------------
+Iași Airport is used here as a \textbf{conceptual case study}. The demo does not reproduce real indoor geometry; it proves how a digital guide could behave once connected to authorized airport data.
+
+\subsection{Why a Multimodal Assistant}
+
+Static PDF maps and generic GPS fail indoors because they cannot:
+
+\begin{itemize}
+    \item overlay directions in the passenger's field of view,
+    \item speak guidance in the passenger's language hands-free,
+    \item adapt when corridors or services move,
+    \item answer contextual questions without staff intervention.
+\end{itemize}
+
+Our approach combines \textbf{visual} (camera + direction lines), \textbf{vocal} (Romanian voice clips), and \textbf{conversational} (FAQ) channels in one branded mobile experience.
+
 \section{Our Solution}
-% ------------------------------------------------------------
 
 \begin{solutionbox}
-We built \textbf{Iași Airport AR Guide --- Demo}: a passenger-facing mobile application that combines AR indoor navigation, a bilingual airport assistant chatbot, dynamic route recalculation, and a staff map editor---all running on a safe, simulated airport layout for demonstration purposes.
+We built a \textbf{three-module passenger app} branded for Aeroportul Internațional Iași: \emph{Descoperă aeroportul} (Discover), \emph{Întrebări și răspunsuri} (FAQ), and \emph{Despre aplicație} (About). Discover mode delivers camera-based spatial hints and voice guidance; the FAQ module answers common airport questions offline; the codebase includes AR Foundation and graph navigation modules ready for production-scale indoor routing.
 \end{solutionbox}
 
-\subsection{What the Application Is}
-
-The app is an \textbf{AR indoor navigation assistant} for airport passengers. On their phone, users can:
-
-\begin{enumerate}[label=\arabic*.]
-    \item choose where they want to go (e.g.\ Gate A1, cafe, baggage claim),
-    \item receive AR arrows and step-by-step instructions on the floor in front of them,
-    \item ask a chatbot questions in Romanian or English,
-    \item take a short guided tour of key airport zones.
-\end{enumerate}
-
-Airport staff can use a separate \textbf{Staff Mode} inside the same app to mark demo corridors as open, closed, or temporarily unavailable. When they do, passenger routes recalculate automatically.
-
-\subsection{What We Are Trying to Solve}
-
-At a high level, the application addresses three connected needs:
-
-\begin{description}
-    \item[Passenger wayfinding] Help people reach public zones quickly and confidently, even when the layout is unfamiliar or recently changed.
-    \item[Operational agility] Allow staff to reflect layout changes digitally without redeploying the entire app.
-    \item[Trust and compliance] Demonstrate the product idea using fictional data only, so the concept can be shown safely before real airport maps are integrated.
-\end{description}
-
-% ------------------------------------------------------------
-\section{What the Application Does}
-% ------------------------------------------------------------
-
-\subsection{For Passengers}
+\subsection{Application Modules (Current Demo)}
 
 \begin{table}[H]
 \centering
-\caption{Passenger-facing capabilities}
-\begin{tabular}{@{}p{3.5cm}p{10cm}@{}}
+\caption{Passenger-facing modules in the hackathon build}
+\begin{tabular}{@{}p{3.2cm}p{10.3cm}@{}}
 \toprule
-\textbf{Feature} & \textbf{What the user experiences} \\
+\textbf{Module} & \textbf{User experience} \\
 \midrule
-AR Navigation &
-Select a destination and follow blue AR arrows with text instructions such as ``Continue toward Security Control''. \\
-Airport Assistant &
-Ask ``Cum ajung la cafenea?'' or ``Where is baggage claim?'' and get a clear answer plus a \textbf{Navigate There} button. \\
-Airport Tour &
-Walk through a guided presentation of key zones (entrance, check-in, security, gates, baggage, taxi exit). \\
-Route Summary &
-See the full path and estimated walking distance before and during navigation. \\
+\textbf{Descoperă aeroportul} &
+Opens the device camera. First tap shows three direction hints (check-in, Security, Ciambella/toilets) plus a welcome message. Turning the phone filters visible directions; tapping each hint plays a dedicated Romanian voice clip and shows explanatory text. \\
+\textbf{Întrebări și răspunsuri} &
+Ten suggested questions and free-text input. Rule-based answers about Iași Airport (location, IATA code, transport, facilities, parking, check-in, Wi-Fi, flights, app purpose). No cloud API. \\
+\textbf{Despre aplicație} &
+Hackathon disclaimer, module overview, and branding aligned with the airport identity. \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{For Airport Staff (Demo Mode)}
+\subsection{Spatial \& Voice Guidance (Discover Mode)}
 
-Staff Mode simulates how operations teams would manage the indoor map in production:
+Discover mode is designed as a \textbf{multimodal orientation layer}:
+
+\begin{enumerate}[label=\arabic*.]
+    \item \textbf{Live camera preview} --- immediate situational awareness (WebCam / device rear camera).
+    \item \textbf{Gyroscopic direction overlay} --- when facing forward, all three routes are shown; rotating left or right isolates Security or Ciambella lines.
+    \item \textbf{Voice assistant} --- pre-recorded Romanian speech (Ioana voice profile) played through a native iOS \texttt{AVAudioPlayer} pipeline for reliable output alongside the camera session.
+    \item \textbf{On-screen assistant bubble} --- synchronized text for accessibility and noisy environments.
+\end{enumerate}
+
+\begin{techbox}
+The product narrative for stakeholders: \emph{``Point your phone, hear where to go, read it if you prefer.''} This is the core differentiator versus a static airport website or PDF map.
+\end{techbox}
+
+\subsection{AR Vision (Integrated Architecture)}
+
+The codebase ships with \textbf{Unity AR Foundation} (ARKit on iOS, ARCore on Android) via \texttt{MobileARSessionBootstrap}. The hackathon demo prioritises a stable camera + overlay experience; the same project structure supports:
 
 \begin{itemize}
-    \item view all walkable connections in the layout,
-    \item mark a corridor as \textbf{open}, \textbf{closed}, or \textbf{temporary},
-    \item add a temporary message (e.g.\ ``Demo corridor temporarily closed''),
-    \item save changes and immediately affect active passenger routes.
+    \item plane detection and floor-anchored arrow meshes (\texttt{DiscoverFloorArrowGuide});
+    \item XR Origin lifecycle management;
+    \item Editor tooling for iOS/Android AR configuration (\texttt{PlatformTools}, post-processors).
 \end{itemize}
 
-\subsection{End-to-End User Journey}
+For jury and investor conversations, AR is presented as \textbf{Phase~2}: anchor direction arrows on detected floor planes while retaining the current voice + UI layer unchanged.
 
-Figure~\ref{fig:user-journey} shows a typical passenger journey through the app.
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[
-    step/.style={draw, rounded corners, minimum width=2.8cm, minimum height=1cm, align=center, fill=blue!8},
-    arrow/.style={-{Stealth[length=2.2mm]}, thick}
-]
-\node[step] (open) {Open app};
-\node[step, right=0.6cm of open] (choose) {Choose destination\\or ask chatbot};
-\node[step, right=0.6cm of choose] (route) {App calculates\\best route};
-\node[step, right=0.6cm of route] (ar) {AR arrows guide\\step by step};
-\node[step, below=1.2cm of route] (staff) {Staff closes\\a corridor};
-\node[step, left=0.6cm of staff] (recalc) {Route\\recalculates};
-
-\draw[arrow] (open) -- (choose);
-\draw[arrow] (choose) -- (route);
-\draw[arrow] (route) -- (ar);
-\draw[arrow] (staff) -- (recalc);
-\draw[arrow] (recalc) -- (route);
-\end{tikzpicture}
-\caption{Passenger journey and dynamic rerouting (business view)}
-\label{fig:user-journey}
-\end{figure}
-
-% ------------------------------------------------------------
 \section{Value Proposition}
-% ------------------------------------------------------------
-
-\subsection{Benefits}
 
 \begin{table}[H]
 \centering
-\caption{Why this solution matters}
-\begin{tabular}{@{}p{4.5cm}p{9cm}@{}}
+\caption{Stakeholder benefits}
+\begin{tabular}{@{}p{4.2cm}p{9.3cm}@{}}
 \toprule
 \textbf{Benefit} & \textbf{Impact} \\
 \midrule
-Reduced passenger stress &
-Clear AR guidance lowers anxiety in complex, changing environments. \\
-Faster self-service &
-Fewer passengers need to ask staff for basic directions. \\
-Real-time adaptability &
-Closed corridors no longer strand passengers on invalid routes. \\
-Multilingual support &
-Romanian-first chatbot assists local and international travellers. \\
-Low-risk demonstration &
-Fictional demo layout allows hackathon and stakeholder demos without compliance risk. \\
-Future-ready architecture &
-Same product logic can later connect to an authorized real indoor map. \\
+Reduced orientation stress & Visual + spoken cues lower anxiety in unfamiliar terminals. \\
+Romanian-first UX & Matches the primary passenger profile at Iași. \\
+Offline FAQ & Answers work without Wi-Fi or backend dependency---critical airside. \\
+Modular codebase & Map graph, pathfinding, and AR layers can ship incrementally. \\
+Compliance-safe demo & Fictional layout + clear disclaimers; ready for authorized map swap. \\
+Native mobile quality & Custom iOS audio plugin, branded UI theme, device camera integration. \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{What Makes Our Approach Different}
-
-Unlike a static map or a generic GPS app, our application is designed specifically for \textbf{indoor airport navigation during layout change}:
-
-\begin{itemize}
-    \item routes are graph-based and recalculate when connections close,
-    \item guidance is visual (AR arrows) and textual (next-step instructions),
-    \item assistance is conversational (chatbot) and actionable (one tap to navigate),
-    \item staff and passengers share the same underlying map model.
-\end{itemize}
-
-% ------------------------------------------------------------
 \section{Compliance and Trust}
-% ------------------------------------------------------------
-
-Because we do not have access to real airport maps or sensitive infrastructure data, the MVP uses a fictional \textbf{Demo Airport Layout}.
 
 \begin{compliancebox}
-The demo does \textbf{not} use or recreate the real layout of Iași Airport. All zones, coordinates, connections, and routes are fictional. Disclaimers are shown throughout the app. This allows us to demonstrate the product idea responsibly while meeting compliance requirements.
+Direction hints in Discover mode are \textbf{orientative demo content} (check-in forward, security left, restaurant/toilets right). They do \textbf{not} represent the real floor plan of Iași Airport. FAQ answers use publicly describable general information. This prototype is not the official airport application.
 \end{compliancebox}
 
-In a real deployment, the airport would provide an authorized indoor map. Our application architecture is designed so that only the map data layer needs to be replaced---the navigation, chatbot, and staff update logic remain the same.
+\section{Hackathon Demo Script}
 
-% ------------------------------------------------------------
-\section{Hackathon Scope: What We Prove}
-% ------------------------------------------------------------
-
-This MVP is intentionally scoped to validate the \emph{idea}, not to ship a production app. At the hackathon we demonstrate that:
-
-\begin{enumerate}[label=\arabic*.]
-    \item A passenger can select a destination and receive AR-style guidance.
-    \item A chatbot can answer common questions and hand off to navigation.
-    \item Staff can close a corridor and the app finds an alternative route.
-    \item The product communicates clearly that the layout is simulated.
-    \item The concept is technically feasible on Unity + AR Foundation (Android).
-\end{enumerate}
-
-The demo layout includes ten public zones (entrance, information desk, check-in, security, cafe, toilets, two gates, baggage claim, taxi exit) connected by twelve fictional walkable paths.
-
-% ------------------------------------------------------------
-\section{Demonstration Scenarios}
-% ------------------------------------------------------------
-
-Table~\ref{tab:demo-flows-business} describes the recommended live demo flows from a presenter perspective.
+Recommended live flow (2--3 minutes):
 
 \begin{table}[H]
 \centering
-\caption{Recommended hackathon demo flows}
-\label{tab:demo-flows-business}
-\begin{tabular}{@{}p{2.8cm}p{10.8cm}@{}}
+\caption{Presentation flow for judges}
+\label{tab:demo-flows}
+\begin{tabular}{@{}p{2.5cm}p{11.1cm}@{}}
 \toprule
-\textbf{Scenario} & \textbf{Story to tell} \\
+\textbf{Step} & \textbf{What to show / say} \\
 \midrule
-AR Navigation &
-``A passenger needs Gate A1. They select it and follow AR arrows with step-by-step instructions---all on a simulated layout.'' \\
-Chatbot to Nav &
-``They ask in Romanian how to reach the cafe. The assistant explains and starts navigation with one tap.'' \\
-Dynamic Update &
-``Construction closes a corridor. Staff mark it closed. The passenger's route to Gate A1 automatically reroutes.'' \\
-Compliance &
-``We are asked if this is the real map. The app explains it is simulated for compliance, ready for authorized data later.'' \\
-Airport Tour &
-``First-time travellers can explore what each zone is for before they walk there.'' \\
+1. Branding &
+Open app $\rightarrow$ official-style logo and three clear modules. ``One app for orientation and information.'' \\
+2. Discover &
+Tap \emph{Descoperă aeroportul} $\rightarrow$ allow camera $\rightarrow$ tap screen $\rightarrow$ welcome text + three direction lines. \\
+3. Spatial &
+Rotate phone left/right $\rightarrow$ only the relevant line remains. ``Context-aware hints without a floor plan download.'' \\
+4. Voice &
+Tap Check-in / Security / Ciambella buttons $\rightarrow$ Romanian voice + text bubble. \\
+5. FAQ &
+Open \emph{Întrebări} $\rightarrow$ tap suggested question $\rightarrow$ instant on-device answer. \\
+6. Vision &
+Mention AR Foundation + graph navigation in codebase for full indoor routing in production. \\
+7. Compliance &
+Read disclaimer from \emph{Despre aplicație}. \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Opening line for any presentation:
+Opening line:
 
 \begin{quote}
-\textit{This demo uses a fictional airport layout. It does not represent the real Iași Airport.}
+\textit{This is a hackathon prototype for Aeroportul Internațional Iași. Direction overlays are demonstrative; production would use authorized indoor maps and positioning.}
 \end{quote}
 
-% ------------------------------------------------------------
-\section{Vision for Real Deployment}
-% ------------------------------------------------------------
-
-If taken beyond the hackathon, the product roadmap would include:
+\section{Roadmap Beyond the Hackathon}
 
 \begin{enumerate}
-    \item Integration with an \textbf{airport-authorised indoor map} and positioning system.
-    \item Backend sync so staff changes propagate to all passenger devices in real time.
-    \item Flight-aware features (e.g.\ ``Navigate to your gate'' based on boarding pass).
-    \item Analytics for airport operations (congestion, common lost-passenger points).
-    \item Enhanced chatbot connected to approved airport knowledge bases.
+    \item Authorized indoor map + positioning (beacons, VPS, or SLAM).
+    \item Floor-anchored AR arrows on detected planes (infrastructure already in project).
+    \item Live TTS / speech recognition with airport-approved content.
+    \item Staff corridor editor synced to backend (graph module exists).
+    \item Flight-aware ``navigate to your gate'' from boarding pass data.
 \end{enumerate}
-
-The hackathon MVP proves the core loop---\emph{navigate, assist, update, reroute}---that makes the full product valuable.
-
-% ------------------------------------------------------------
-\section{Business Conclusion}
-% ------------------------------------------------------------
-
-Airports in reconstruction need more than new signs---they need \textbf{digital wayfinding that keeps up with change}. \textbf{Iași Airport AR Guide --- Demo} shows how AR navigation, a passenger chatbot, and staff-controlled map updates can work together as a single product experience.
-
-The problem is real; our application is a concrete, demonstrable response to it. Part~II of this document explains how that response is built in Unity and C\#.
 
 \newpage
 
@@ -393,636 +280,417 @@ The problem is real; our application is a concrete, demonstrable response to it.
 \part{Technical Implementation}
 \label{part:technical}
 
-% ------------------------------------------------------------
-\section{Introduction}
-% ------------------------------------------------------------
-
-This part of the document is intended for developers and technical colleagues joining the project. It describes the Unity architecture, data model, pathfinding logic, AR components, and setup instructions. No prior familiarity with the codebase is assumed.
-
-The MVP is built with:
-
-\begin{itemize}
-    \item Unity \textbf{2022.3.62f3} (recommended LTS patch)
-    \item AR Foundation (Android / ARCore)
-    \item C\#
-    \item Local JSON map data
-    \item No external APIs
-\end{itemize}
-
-An \textbf{editor fallback mode} renders the simulated graph in 3D when AR hardware is unavailable, which is essential for hackathon demos without an Android device.
-
-% ------------------------------------------------------------
-\section{High-Level System Overview}
-% ------------------------------------------------------------
-
-The application uses a \textbf{single-scene, multi-panel UI}. At runtime, \texttt{DemoAppBootstrap} constructs the full interface and core services.
-
-\subsection{Main User Modes}
+\section{Technology Stack}
 
 \begin{table}[H]
 \centering
-\caption{Application modes exposed from the main menu}
-\begin{tabular}{@{}llp{7.5cm}@{}}
+\caption{Core technologies}
+\begin{tabular}{@{}ll@{}}
 \toprule
-\textbf{Mode} & \textbf{Primary script(s)} & \textbf{Purpose} \\
+\textbf{Layer} & \textbf{Choice} \\
 \midrule
-Main Menu & \texttt{AppController} & Entry point and disclaimer \\
-AR Navigation & \texttt{ARNavigationManager} & Route calculation and guidance \\
-Destination Selection & \texttt{DestinationSelector} & Choose target zone \\
-Chatbot & \texttt{ChatbotManager} & Keyword-based Q\&A \\
-Staff Mode & \texttt{StaffMapEditor} & Edit connection status \\
-Airport Tour & \texttt{AirportTourManager} & Guided zone presentation \\
-About Demo & \texttt{AppController} & Compliance explanation \\
+Engine & Unity \textbf{2022.3.62f3} LTS \\
+Language & C\# (IL2CPP on device) \\
+Mobile UI & Unity uGUI, programmatic bootstrap \\
+Discover camera & \texttt{WebCamTexture} + \texttt{RawImage} preview \\
+Spatial overlay & Device gyroscope + compass, UI line rendering \\
+Voice (iOS) & Native \texttt{AVAudioPlayer} plugin (\texttt{.mm}) \\
+Voice assets & StreamingAssets WAV (Romanian, pre-rendered) \\
+AR platform & AR Foundation, ARKit (iOS), ARCore (Android) \\
+FAQ & Rule-based keyword matching, zero network \\
+Map / routing & Local JSON graph + Dijkstra (extension module) \\
+Build tooling & Custom Editor menus, iOS plist post-processor \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Architecture Layers}
+\section{High-Level Architecture}
 
-Figure~\ref{fig:architecture} shows the logical layering of the system.
+The app uses a \textbf{single-scene, runtime-constructed UI}. No manual wiring of dozens of panels in the Inspector---everything is built in code for reproducibility and hackathon velocity.
 
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[
-    layer/.style={draw, rounded corners, minimum width=11cm, minimum height=1.1cm, align=center, fill=#1},
+    layer/.style={draw, rounded corners, minimum width=11.5cm, minimum height=1.05cm, align=center, fill=#1},
     arrow/.style={-{Stealth[length=2.2mm]}, thick}
 ]
-\node[layer=blue!10] (ui) {UI Layer: panels, buttons, chat, staff editor, tour};
-\node[layer=green!10, below=0.45cm of ui] (nav) {Navigation Layer: pathfinding, route state, instructions};
-\node[layer=orange!12, below=0.45cm of nav] (map) {Map Layer: JSON loader, graph model, persistence};
-\node[layer=gray!15, below=0.45cm of map] (ar) {Presentation Layer: AR arrows, editor 3D graph fallback};
+\node[layer=branddark!15] (boot) {\textbf{Bootstrap Layer} --- \texttt{DemoAppBootstrap}, \texttt{UiTheme}, EventSystem, AudioListener};
+\node[layer=blue!10, below=0.4cm of boot] (ui) {\textbf{Presentation Layer} --- \texttt{AppController}, panels, branded buttons, logo header};
+\node[layer=green!12, below=0.4cm of ui] (disc) {\textbf{Discover Layer} --- camera, gyro overlay, voice assistant, native audio};
+\node[layer=orange!12, below=0.4cm of disc] (faq) {\textbf{Knowledge Layer} --- \texttt{ChatbotManager}, intents, suggested questions};
+\node[layer=gray!12, below=0.4cm of faq] (ext) {\textbf{Extension Layer} --- map JSON, graph, pathfinding, AR session, floor arrows};
 
-\draw[arrow] (ui) -- (nav);
-\draw[arrow] (nav) -- (map);
-\draw[arrow] (nav) -- (ar);
+\draw[arrow] (boot) -- (ui);
+\draw[arrow] (ui) -- (disc);
+\draw[arrow] (ui) -- (faq);
+\draw[arrow] (disc) -- (ext);
 \end{tikzpicture}
-\caption{Logical architecture of the MVP}
+\caption{Layered architecture (hackathon MVP + extension modules)}
 \label{fig:architecture}
 \end{figure}
 
-\subsection{Singleton Services}
-
-Two persistent services are created at startup:
+\subsection{Design Principles (Technical Jury)}
 
 \begin{itemize}
-    \item \texttt{AirportMapLoader} --- loads and saves map JSON.
-    \item \texttt{PathfindingService} --- builds the graph and computes routes.
+    \item \textbf{Separation of concerns} --- UI bootstrap, discover logic, speech, chatbot, and navigation are isolated namespaces.
+    \item \textbf{Offline-first} --- FAQ and voice clips require no backend; suitable for airport Wi-Fi constraints.
+    \item \textbf{Native where Unity falls short} --- iOS audio session conflicts with camera are solved via a dedicated Objective-C++ plugin (\texttt{IosDiscoverAudio.mm}).
+    \item \textbf{Progressive enhancement} --- Discover works with camera + UI; AR Foundation adds plane-anchored arrows when enabled.
+    \item \textbf{Editor automation} --- platform setup, scene creation, and validation menus reduce human error in builds.
 \end{itemize}
 
-Shared navigation state is stored in the static class \texttt{AppState}, which allows the chatbot and destination selector to trigger navigation without tight coupling between UI panels.
+\section{Runtime Bootstrap \& Navigation}
 
-% ------------------------------------------------------------
-\section{Map Data Model}
-% ------------------------------------------------------------
+\subsection{Entry Point}
 
-The simulated airport is represented as a \textbf{graph}:
+\texttt{DemoAppBootstrap} (\texttt{DefaultExecutionOrder(-100)}) executes on scene load:
 
-\begin{itemize}
-    \item \textbf{Nodes} = public zones (entrance, check-in, gates, etc.)
-    \item \textbf{Edges} = walkable connections between zones
-    \item \textbf{Edge cost} = fictional distance in meters
-    \item \textbf{Edge status} = \texttt{open}, \texttt{closed}, or \texttt{temporary}
-\end{itemize}
-
-\subsection{JSON File Location}
-
-\begin{center}
-\texttt{Assets/Resources/Data/demo\_airport\_map.json}
-\end{center}
-
-Unity loads this file through \texttt{Resources.Load<TextAsset>("Data/demo\_airport\_map")}.
-
-\subsection{Schema Overview}
-
-\begin{lstlisting}[style=json,caption={Simplified map JSON structure},label={lst:json-schema}]
-{
-  "mapName": "Demo Airport Layout",
-  "version": "1.0",
-  "lastUpdated": "2026-06-06",
-  "disclaimer": "...",
-  "zones": [
-    {
-      "id": "entrance",
-      "name": "Airport Entrance",
-      "description": "...",
-      "type": "public",
-      "position": { "x": 0, "y": 0, "z": 0 }
-    }
-  ],
-  "connections": [
-    {
-      "id": "entrance_info",
-      "from": "entrance",
-      "to": "info",
-      "distance": 5,
-      "status": "open"
-    }
-  ],
-  "temporaryMessages": []
-}
-\end{lstlisting}
-
-\subsection{Demo Zones}
-
-The default layout contains ten fictional public zones:
-
-\begin{table}[H]
-\centering
-\caption{Zones in the demo layout}
-\begin{tabular}{@{}ll@{}}
-\toprule
-\textbf{Zone ID} & \textbf{Display Name} \\
-\midrule
-\texttt{entrance} & Airport Entrance \\
-\texttt{info} & Information Desk \\
-\texttt{checkin} & Check-in Area \\
-\texttt{security} & Security Control \\
-\texttt{cafe} & Cafe \\
-\texttt{toilets} & Toilets \\
-\texttt{gate\_a1} & Gate A1 \\
-\texttt{gate\_a2} & Gate A2 \\
-\texttt{baggage} & Baggage Claim \\
-\texttt{exit\_taxi} & Taxi Exit \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Positions (\texttt{x}, \texttt{y}, \texttt{z}) are used for visualization and arrow placement only. They do not represent real-world coordinates.
-
-\subsection{C\# Data Classes}
-
-File: \texttt{Assets/Scripts/Map/AirportMapData.cs}
-
-\begin{itemize}
-    \item \texttt{AirportMapData}
-    \item \texttt{AirportZone}
-    \item \texttt{AirportConnection}
-    \item \texttt{Vector3Data}
-    \item \texttt{TemporaryMapMessage}
-\end{itemize}
-
-Unity's \texttt{JsonUtility} deserializes the JSON into these serializable classes.
-
-% ------------------------------------------------------------
-\section{Map Loading and Persistence}
-% ------------------------------------------------------------
-
-\texttt{AirportMapLoader} is responsible for reading and writing map data.
-
-\subsection{Load Order}
-
-\begin{enumerate}
-    \item On startup, check for a saved file at\\
-    \texttt{Application.persistentDataPath/demo\_airport\_map\_saved.json}
-    \item If present, load the saved map.
-    \item Otherwise, load the default JSON from Resources.
-    \item Raise the \texttt{MapChanged} event so pathfinding and UI refresh.
+\begin{enumerate}[noitemsep]
+    \item ensures \texttt{EventSystem} and \texttt{AudioListener} exist;
+    \item creates \texttt{MobileARSessionBootstrap} (AR Foundation singleton);
+    \item builds Canvas (1080$\times$1920 reference resolution);
+    \item constructs four panels: Main Menu, Discover, FAQ, About;
+    \item wires \texttt{AppController} panel references via reflection.
 \end{enumerate}
 
-\subsection{Staff Persistence}
+\subsection{Panel State Machine}
 
-When staff tap \textbf{Save Map}, the current in-memory map is serialized back to the persistent file. \textbf{Reset to Default} deletes the saved file and reloads the bundled demo JSON.
+\texttt{AppController} exposes \texttt{AppPanel}: \texttt{MainMenu}, \texttt{Discover}, \texttt{Faq}, \texttt{About}.
 
-This design simulates how a future production app could sync map updates from a staff tool, while keeping the MVP fully offline.
+When leaving Discover, \texttt{AirportDiscoverController.OnDiscoverHidden()} stops the camera and resets the voice assistant---preventing resource leaks on mid-tier iPhones.
 
-% ------------------------------------------------------------
-\section{Graph Construction and Pathfinding}
-% ------------------------------------------------------------
+\section{Discover Module --- Deep Dive}
 
-\subsection{AirportGraph}
-
-File: \texttt{Assets/Scripts/Navigation/AirportGraph.cs}
-
-The graph builder:
-
-\begin{itemize}
-    \item indexes zones by \texttt{id},
-    \item stores connections by \texttt{id},
-    \item creates a \textbf{bidirectional adjacency list},
-    \item treats only \texttt{open} and \texttt{temporary} connections as traversable.
-\end{itemize}
-
-When staff change a connection status, the graph rebuilds its adjacency lists while preserving the underlying map objects.
-
-\subsection{PathfindingService}
-
-File: \texttt{Assets/Scripts/Navigation/PathfindingService.cs}
-
-Route calculation uses \textbf{Dijkstra's algorithm} with edge weights equal to connection distance. The service exposes:
-
-\begin{itemize}
-    \item \texttt{FindPath(startZoneId, destinationZoneId)}
-    \item \texttt{SetConnectionStatus(connectionId, status)}
-    \item \texttt{GetConnectionStatus(connectionId)}
-    \item \texttt{RouteRecalculated} event
-\end{itemize}
-
-The result is wrapped in a \texttt{PathResult} object containing:
-
-\begin{itemize}
-    \item ordered list of zone IDs,
-    \item total demo distance,
-    \item human-readable route summary (e.g.\ \emph{Entrance → Information Desk → Gate A1}).
-\end{itemize}
-
-If no route exists, the service returns an empty path and the UI shows:
-
-\begin{quote}
-\textit{No available route in the simulated layout. Please ask airport staff for assistance.}
-\end{quote}
-
-\subsection{Example: Default Route to Gate A1}
-
-Starting from \texttt{entrance}, the default shortest route is:
-
-\begin{center}
-Entrance → Information Desk → Check-in Area → Security Control → Gate A1
-\end{center}
-
-Estimated demo distance: \textbf{36 m}.
-
-\subsection{Example: Rerouting After Staff Edit}
-
-If staff mark connection \texttt{checkin\_security} as \texttt{closed}, the direct path through security is removed. An alternative route becomes available:
-
-\begin{center}
-Entrance → Information Desk → Check-in Area → Cafe → Toilets → Gate A1
-\end{center}
-
-This demonstrates dynamic rerouting during layout changes.
-
-% ------------------------------------------------------------
-\section{AR Navigation and Editor Fallback}
-% ------------------------------------------------------------
-
-\subsection{ARNavigationManager}
-
-File: \texttt{Assets/Scripts/AR/ARNavigationManager.cs}
-
-Responsibilities:
-
-\begin{enumerate}
-    \item accept a destination zone ID,
-    \item default start zone = \texttt{entrance} (via \texttt{AppState}),
-    \item request a route from \texttt{PathfindingService},
-    \item spawn visual guidance,
-    \item display destination, route summary, next step, and distance,
-    \item recalculate automatically when the map changes.
-\end{enumerate}
-
-Step instructions are generated from zone names and relative direction between fictional positions, for example:
-
-\begin{itemize}
-    \item ``Go forward toward Information Desk''
-    \item ``Continue toward Security Control''
-    \item ``You have arrived at Gate A1''
-\end{itemize}
-
-\subsection{ARArrowSpawner}
-
-File: \texttt{Assets/Scripts/AR/ARArrowSpawner.cs}
-
-For each segment of the route, the spawner places primitive 3D arrows slightly above the floor, oriented toward the next waypoint. When the route changes, old arrows are destroyed first.
-
-\subsection{Editor Fallback Mode}
-
-File: \texttt{Assets/Scripts/AR/EditorDemoNavigationView.cs}
-
-When AR is unavailable (Unity Editor or device without configured AR Session), the app:
-
-\begin{itemize}
-    \item renders zones as spheres,
-    \item renders connections as lines,
-    \item highlights the active route in blue,
-    \item still spawns demo arrows along the selected path.
-\end{itemize}
-
-This is critical for hackathon demos when a physical Android device is not available.
-
-% ------------------------------------------------------------
-\section{User Interface Implementation}
-% ------------------------------------------------------------
-
-\subsection{Panel Controller}
-
-\texttt{AppController} switches between panels using an \texttt{AppPanel} enum:
-
-\begin{verbatim}
-MainMenu, Navigation, DestinationSelection,
-Chatbot, StaffMode, AirportTour, About
-\end{verbatim}
-
-\subsection{Runtime Bootstrap}
-
-\texttt{DemoAppBootstrap} programmatically creates:
-
-\begin{itemize}
-    \item Canvas and EventSystem,
-    \item all UI panels and buttons,
-    \item core services,
-    \item navigation world root and demo camera.
-\end{itemize}
-
-This avoids manual scene wiring for the hackathon deadline. A menu item \textbf{Airport AR → Create Main Scene} creates a scene with a single bootstrap GameObject.
-
-\subsection{Destination Selection}
-
-\texttt{DestinationSelector} dynamically builds one button per zone. On selection:
-
-\begin{enumerate}
-    \item compute route from current zone,
-    \item show route preview text,
-    \item call \texttt{AppState.RequestNavigation()},
-    \item open the navigation panel.
-\end{enumerate}
-
-% ------------------------------------------------------------
-\section{Chatbot Module}
-% ------------------------------------------------------------
-
-The chatbot is \textbf{rule-based} and runs entirely on-device.
-
-\subsection{Components}
-
-\begin{itemize}
-    \item \texttt{ChatbotIntent} --- enum of supported intents
-    \item \texttt{ChatbotResponse} --- message + optional navigation target
-    \item \texttt{ChatbotManager} --- keyword matching and UI
-\end{itemize}
-
-\subsection{Behavior}
-
-User input is normalized and matched against Romanian and English keywords. Example intents:
-
-\begin{table}[H]
-\centering
-\caption{Sample chatbot intents}
-\begin{tabular}{@{}p{5.2cm}p{5.2cm}p{3.8cm}@{}}
-\toprule
-\textbf{Example question} & \textbf{Intent} & \textbf{Navigate target} \\
-\midrule
-Unde este check-in-ul? & DirectionsCheckIn & \texttt{checkin} \\
-Cum ajung la securitate? & DirectionsSecurity & \texttt{security} \\
-Unde pot bea o cafea? & DirectionsCafe & \texttt{cafe} \\
-Este aceasta harta reala? & IsRealMap & none \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-When directions are provided, the chatbot:
-
-\begin{enumerate}
-    \item explains the destination in simple language,
-    \item states that the route is simulated,
-    \item shows a \textbf{Navigate There} button.
-\end{enumerate}
-
-No cloud LLM or external API is used.
-
-% ------------------------------------------------------------
-\section{Staff Mode and Airport Tour}
-% ------------------------------------------------------------
-
-\subsection{StaffMapEditor}
-
-Staff can inspect every connection and set status to:
-
-\begin{itemize}
-    \item \texttt{open}
-    \item \texttt{closed}
-    \item \texttt{temporary} (optional message stored in \texttt{temporaryMessages})
-\end{itemize}
-
-Saving triggers:
-
-\begin{itemize}
-    \item JSON persistence,
-    \item graph rebuild,
-    \item active navigation recalculation via events.
-\end{itemize}
-
-\subsection{AirportTourManager}
-
-The tour presents seven narrative stops describing public airport concepts using simulated zones. Each stop includes:
-
-\begin{itemize}
-    \item zone name and description,
-    \item \textbf{Navigate Here} button,
-    \item \textbf{Next Zone} button.
-\end{itemize}
-
-Every description explicitly mentions that the content belongs to the demo layout.
-
-% ------------------------------------------------------------
-\section{Event Flow and Component Interaction}
-% ------------------------------------------------------------
-
-Figure~\ref{fig:sequence} summarizes the navigation flow.
+Discover is the most technically dense subsystem. Component diagram:
 
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[
-    node distance=0.9cm,
-    actor/.style={rectangle, draw, rounded corners, minimum width=2.6cm, minimum height=0.8cm, align=center, fill=blue!8},
-    action/.style={rectangle, draw, dashed, rounded corners, minimum width=8.5cm, minimum height=0.8cm, align=center, fill=gray!8}
+    comp/.style={draw, rounded corners, minimum width=3.1cm, minimum height=0.85cm, align=center, fill=blue!8, font=\small},
+    arrow/.style={-{Stealth[length=2mm]}, thick}
 ]
-\node[actor] (user) {User / UI};
-\node[action, below=of user] (a1) {Select destination or ask chatbot};
-\node[action, below=of a1] (a2) {AppState.RequestNavigation(zoneId)};
-\node[action, below=of a2] (a3) {PathfindingService.FindPath(start, destination)};
-\node[action, below=of a3] (a4) {ARNavigationManager updates UI + ARArrowSpawner};
-\node[action, below=of a4] (a5) {Staff edits connection -> MapChanged -> recalculate route};
+\node[comp] (adc) {AirportDiscover\\Controller};
+\node[comp, right=0.5cm of adc] (cam) {SimpleCamera\\Preview};
+\node[comp, below=0.55cm of adc] (dva) {DiscoverVoice\\Assistant};
+\node[comp, right=0.5cm of dva] (dov) {DiscoverDirection\\Overlay};
+\node[comp, below=0.55cm of dva] (mss) {MobileSpeech\\Service};
+\node[comp, right=0.5cm of mss] (ios) {IosDiscoverAudio\\(.mm)};
 
-\draw[-{Stealth[length=2mm]}] (user) -- (a1);
-\draw[-{Stealth[length=2mm]}] (a1) -- (a2);
-\draw[-{Stealth[length=2mm]}] (a2) -- (a3);
-\draw[-{Stealth[length=2mm]}] (a3) -- (a4);
-\draw[-{Stealth[length=2mm]}] (a4) -- (a5);
+\draw[arrow] (adc) -- (cam);
+\draw[arrow] (adc) -- (dva);
+\draw[arrow] (dva) -- (dov);
+\draw[arrow] (dva) -- (mss);
+\draw[arrow] (mss) -- (ios);
 \end{tikzpicture}
-\caption{Simplified navigation and rerouting flow}
-\label{fig:sequence}
+\caption{Discover subsystem components}
+\label{fig:discover}
 \end{figure}
 
-Key decoupling mechanism:
+\subsection{Camera Pipeline (\texttt{SimpleCameraPreview})}
 
-\begin{lstlisting}[style=csharp,caption={Shared navigation trigger (AppState.cs)},label={lst:appstate}]
-public static void RequestNavigation(string destinationZoneId)
-{
-    PendingDestinationZoneId = destinationZoneId;
-    NavigationRequested?.Invoke(destinationZoneId);
-}
-\end{lstlisting}
+\begin{itemize}
+    \item Requests \texttt{UserAuthorization.WebCam} on iOS/Android.
+    \item Selects rear-facing \texttt{WebCamDevice} when available.
+    \item Applies rotation and UV correction for portrait preview on \texttt{RawImage}.
+    \item Runs independently of ARKit---stable preview for hackathon demos.
+\end{itemize}
 
-% ------------------------------------------------------------
-\section{Project Structure}
-% ------------------------------------------------------------
+\subsection{Gyroscopic Direction Overlay (\texttt{DiscoverDirectionOverlay})}
+
+On \texttt{Show()}, the overlay calibrates device yaw as ``forward''. Each frame:
+
+\begin{itemize}
+    \item $| \Delta yaw | \leq 38°$ $\rightarrow$ show all three lines (check-in, Security, Ciambella);
+    \item rotate left ($-125°$ to $-38°$) $\rightarrow$ Security only;
+    \item rotate right ($38°$ to $125°$) $\rightarrow$ Ciambella/toilets only;
+    \item otherwise $\rightarrow$ check-in (forward) only.
+\end{itemize}
+
+Lines and hint cards are UI \texttt{Image} elements with programmatic layout in \texttt{DemoAppBootstrap.CreateDirectionLine}. Hint cards are \texttt{Button}s wired to \texttt{DiscoverVoiceAssistant}.
+
+\subsection{Voice Assistant (\texttt{DiscoverVoiceAssistant})}
+
+Interaction model:
+
+\begin{table}[H]
+\centering
+\caption{Discover voice \& text events}
+\begin{tabular}{@{}p{3.5cm}p{10cm}@{}}
+\toprule
+\textbf{User action} & \textbf{System response} \\
+\midrule
+First screen tap & Show overlay + welcome bubble + \texttt{welcome.wav} \\
+Tap Check-in hint & Forward message + \texttt{forward.wav} \\
+Tap Security hint & Security message + \texttt{left.wav} \\
+Tap Ciambella hint & Restaurant/toilets message + \texttt{right.wav} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Messages are constants in \texttt{DiscoverVoiceAssistant}; speech IDs map to StreamingAssets paths in \texttt{MobileSpeechService}.
+
+\subsection{Native iOS Audio (\texttt{IosDiscoverAudio.mm})}
+
+Unity's built-in \texttt{AudioSource} conflicts with \texttt{WebCamTexture} audio sessions on iOS. Our plugin:
+
+\begin{enumerate}[noitemsep]
+    \item configures \texttt{AVAudioSessionCategoryPlayAndRecord} with \texttt{DefaultToSpeaker};
+    \item loads WAV from \texttt{Application.streamingAssetsPath};
+    \item plays via \texttt{AVAudioPlayer} on the main queue;
+    \item logs \texttt{started=1} for Xcode diagnostics.
+\end{enumerate}
+
+C\# invokes native code with \texttt{[MarshalAs(UnmanagedType.LPUTF8Str)]} for IL2CPP-safe string marshaling.
+
+\begin{techbox}
+\textbf{Jury talking point:} We did not give up on voice---we engineered a native bridge when the game engine audio stack was incompatible with the camera pipeline. This is production-grade mobile problem solving.
+\end{techbox}
+
+\subsection{Speech Assets}
+
+\begin{center}
+\texttt{Assets/StreamingAssets/Audio/Discover/}
+\end{center}
+
+\begin{tabular}{@{}ll@{}}
+\texttt{welcome.wav} & Welcome + overview of three directions \\
+\texttt{forward.wav} & Check-in guidance \\
+\texttt{left.wav} & Security Control \\
+\texttt{right.wav} & Ciambella \& toilets \\
+\end{tabular}
+
+Clips were generated with macOS \texttt{say -v Ioana} (Romanian) and converted to PCM WAV for mobile compatibility.
+
+\section{FAQ Module (\texttt{ChatbotManager})}
+
+Fully on-device rule-based assistant:
+
+\begin{itemize}
+    \item 10 suggested question chips (instant tap-to-ask);
+    \item free-text input with keyword normalization;
+    \item auto-reset after 8 messages to prevent UI overflow;
+    \item answers cover location, IATA (IAS), city transport, facilities, parking, check-in timing, Wi-Fi, routes, and app purpose;
+    \item no LLM, no API keys, no latency---ideal for demo reliability.
+\end{itemize}
+
+Intent matching lives in \texttt{ChatbotManager.TryAnswer()} with bilingual keyword lists.
+
+\section{UI System (\texttt{UiTheme})}
+
+Centralized branding for jury-visible polish:
+
+\begin{itemize}
+    \item Iași Airport logo from \texttt{Resources/UI/IasiAirportLogo.png};
+    \item colour palette: dark blue (\texttt{BrandDark}) + lime green accent (\texttt{BrandGreen});
+    \item reusable \texttt{CreateAccentButton}, \texttt{CreateSecondaryButton}, rounded cards;
+    \item logo header on Discover, FAQ, and About panels.
+\end{itemize}
+
+Programmatic UI trades Inspector drag-and-drop for \textbf{version-controlled, reviewable layout code}---a deliberate hackathon architecture choice.
+
+\section{AR Foundation Integration Layer}
+
+Even when Discover mode uses camera preview, the project maintains AR readiness:
+
+\begin{table}[H]
+\centering
+\caption{AR-related components}
+\begin{tabular}{@{}p{4.5cm}p{9.5cm}@{}}
+\toprule
+\textbf{Component} & \textbf{Role} \\
+\midrule
+\texttt{MobileARSessionBootstrap} & Singleton: creates XR Origin, AR Session, plane manager; exposes tracking events \\
+\texttt{DiscoverFloorArrowGuide} & Raycast placement of floor arrow meshes (Phase~2 discover) \\
+\texttt{ARArrowSpawner} & Route segment arrows for graph navigation mode \\
+\texttt{ARNavigationManager} & Orchestrates path + AR/editor visualization \\
+\texttt{EditorDemoNavigationView} & 3D graph fallback in Unity Editor \\
+\texttt{IosSpeechPlistPostProcessor} & Adds Speech/AVFoundation frameworks + plist usage strings \\
+\texttt{PlatformTools} & Editor menus: XR fix, iOS/Android configure, build support diagnose \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{iOS:} ARKit enabled under XR Plug-in Management. \textbf{Android:} ARCore via \texttt{AndroidARProjectConfigurator}.
+
+\section{Extension Module: Graph Navigation}
+
+Retained from early MVP iterations---ready for staff mode and full AR routing demos:
+
+\begin{itemize}
+    \item \texttt{Assets/Resources/Data/demo\_airport\_map.json} --- 10 zones, 12 connections;
+    \item \texttt{AirportMapLoader} --- Resources + persistent staff saves;
+    \item \texttt{AirportGraph} --- bidirectional adjacency, open/closed/temporary edges;
+    \item \texttt{PathfindingService} --- Dijkstra shortest path, \texttt{RouteRecalculated} event;
+    \item \texttt{AppState} --- decoupled navigation requests from UI.
+\end{itemize}
+
+This module is \textbf{not in the simplified main menu} but demonstrates architectural depth: the same app can grow from ``direction hints + FAQ'' to ``full indoor routing'' without a rewrite.
+
+\section{Project Structure (Current)}
 
 \begin{verbatim}
 MVPAirportIasiAR/
 |-- Assets/
 |   |-- Editor/
-|   |   `-- DemoSceneSetup.cs
-|   |-- Resources/Data/
-|   |   `-- demo_airport_map.json
+|   |   |-- DemoSceneSetup.cs          Create Main Scene menu
+|   |   |-- PlatformTools.cs           iOS/Android XR & build tools
+|   |   |-- IosSpeechPlistPostProcessor.cs
+|   |   |-- AndroidARProjectConfigurator.cs
+|   |   `-- DiscoverVoiceValidator.cs
+|   |-- Plugins/
+|   |   |-- iOS/IosDiscoverAudio.mm  Native WAV playback
+|   |   |-- iOS/IosSpeechBridge.mm     TTS/STT bridge (future)
+|   |   `-- Android/SpeechBridge.java
+|   |-- Resources/
+|   |   |-- Data/demo_airport_map.json
+|   |   |-- Audio/Discover/*.aiff      Source clips
+|   |   `-- UI/IasiAirportLogo.png
+|   |-- StreamingAssets/Audio/Discover/*.wav  Device playback
 |   |-- Scripts/
-|   |   |-- AR/
+|   |   |-- DemoAppBootstrap.cs        Runtime UI factory
+|   |   |-- AppState.cs
+|   |   |-- UI/   AppController, UiTheme, ...
+|   |   |-- AR/   Discover, camera, speech, AR session, navigation
 |   |   |-- Chatbot/
 |   |   |-- Map/
-|   |   |-- Navigation/
-|   |   |-- UI/
-|   |   |-- AppState.cs
-|   |   `-- DemoAppBootstrap.cs
-|   `-- Scenes/                 (created via menu)
-|-- Packages/manifest.json
-|-- ProjectSettings/
-|-- README.md
-|-- DEMO_SCRIPT.md
-`-- TESTING.md
+|   |   `-- Navigation/
+|   |-- Scenes/MainScene.unity
+|   `-- XR/                            ARKit / ARCore settings
+|-- docs/documentation.tex
+|-- IOS_AR_TESTING.md
+|-- ANDROID_AR_TESTING.md
+|-- scripts/install_ios_module.sh
+`-- README.md
 \end{verbatim}
 
-\subsection{Script Reference}
+\section{Script Reference (Key Files)}
 
-\begin{longtable}{@{}p{4.5cm}p{9.8cm}@{}}
+\begin{longtable}{@{}p{4.8cm}p{9.5cm}@{}}
 \toprule
 \textbf{Script} & \textbf{Responsibility} \\
 \midrule
 \endhead
-\texttt{AirportMapData.cs} & JSON-serializable data models \\
-\texttt{AirportMapLoader.cs} & Load/save map, raise \texttt{MapChanged} \\
-\texttt{AirportGraph.cs} & Graph representation and connection status \\
-\texttt{PathfindingService.cs} & Dijkstra routing service \\
-\texttt{ARNavigationManager.cs} & Navigation orchestration and UI binding \\
-\texttt{ARArrowSpawner.cs} & Route arrow visualization \\
-\texttt{EditorDemoNavigationView.cs} & Editor 3D graph fallback \\
-\texttt{DestinationSelector.cs} & Destination list UI \\
-\texttt{ChatbotManager.cs} & Rule-based assistant \\
-\texttt{StaffMapEditor.cs} & Staff connection editor \\
-\texttt{AirportTourManager.cs} & Guided tour flow \\
-\texttt{ZoneInfoPanel.cs} & Tour zone detail panel \\
-\texttt{AppController.cs} & Panel navigation \\
-\texttt{DemoAppBootstrap.cs} & Runtime UI and systems setup \\
-\texttt{DemoSceneSetup.cs} & Editor menu to create main scene \\
+\texttt{DemoAppBootstrap.cs} & Builds entire UI, wires discover/FAQ/about, sets branding \\
+\texttt{AppController.cs} & Panel FSM; starts/stops discover lifecycle \\
+\texttt{UiTheme.cs} & Colours, logo header, rounded buttons/cards \\
+\texttt{AirportDiscoverController.cs} & Camera start/stop, user hints \\
+\texttt{SimpleCameraPreview.cs} & WebCamTexture preview pipeline \\
+\texttt{DiscoverDirectionOverlay.cs} & Gyro filtering, line/hint visibility \\
+\texttt{DiscoverVoiceAssistant.cs} & Tap logic, bubble text, speech IDs \\
+\texttt{MobileSpeechService.cs} & Loads WAV; iOS native / Editor AudioSource \\
+\texttt{MobileARSessionBootstrap.cs} & AR Foundation singleton setup \\
+\texttt{ChatbotManager.cs} & FAQ UI, suggested questions, keyword answers \\
+\texttt{AirportMapLoader.cs} & JSON map load/save \\
+\texttt{PathfindingService.cs} & Dijkstra routing (extension) \\
+\texttt{ARNavigationManager.cs} & AR/editor navigation orchestration \\
+\texttt{IosDiscoverAudio.mm} & AVAudioPlayer + session config \\
 \bottomrule
 \end{longtable}
 
-% ------------------------------------------------------------
-\section{Setup and Build Instructions}
-% ------------------------------------------------------------
+\section{Discover Mode --- Sequence Flow}
 
-\subsection{Opening the Project}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    step/.style={draw, rounded corners, minimum width=10cm, minimum height=0.75cm, align=center, fill=gray!8},
+    arrow/.style={-{Stealth[length=2mm]}, thick}
+]
+\node[step] (s1) {User: Descoperă aeroportul};
+\node[step, below=0.35cm of s1] (s2) {AirportDiscoverController $\rightarrow$ SimpleCameraPreview.StartPreview()};
+\node[step, below=0.35cm of s2] (s3) {User taps screen $\rightarrow$ DiscoverDirectionOverlay.Show()};
+\node[step, below=0.35cm of s3] (s4) {DiscoverVoiceAssistant $\rightarrow$ bubble + MobileSpeechService.Play(Welcome)};
+\node[step, below=0.35cm of s4] (s5) {iOS: IosDiscoverAudio $\rightarrow$ AVAudioPlayer(streamingAssets/welcome.wav)};
+\node[step, below=0.35cm of s5] (s6) {User rotates phone $\rightarrow$ overlay filters visible lines (gyro)};
+\node[step, below=0.35cm of s6] (s7) {User taps hint $\rightarrow$ matching WAV + bubble text};
 
-\begin{enumerate}
-    \item Install Unity \textbf{2022.3.62f3} via Unity Hub.
-    \item Open the repository folder as a Unity project.
-    \item Wait for package restore (AR Foundation, ARCore, XR Management).
-    \item Use menu \textbf{Airport AR → Create Main Scene}.
-    \item Press \textbf{Play} to run the demo in the Editor.
-\end{enumerate}
+\draw[arrow] (s1) -- (s2);
+\draw[arrow] (s2) -- (s3);
+\draw[arrow] (s3) -- (s4);
+\draw[arrow] (s4) -- (s5);
+\draw[arrow] (s5) -- (s6);
+\draw[arrow] (s6) -- (s7);
+\end{tikzpicture}
+\caption{End-to-end Discover mode flow}
+\label{fig:discover-seq}
+\end{figure}
 
-\subsection{Android / AR Configuration}
+\section{Build \& Deployment}
 
-\begin{enumerate}
-    \item Switch platform to Android.
-    \item Enable ARCore in \textbf{Project Settings → XR Plug-in Management}.
-    \item Add \textbf{AR Session} and \textbf{XR Origin (Mobile AR)} to the scene.
-    \item Assign AR Session reference on \texttt{ARNavigationManager}.
-    \item Use IL2CPP and ARM64 for release builds.
-    \item Deploy to an ARCore-compatible device.
-\end{enumerate}
-
-\subsection{Dependencies (\texttt{Packages/manifest.json})}
-
-\begin{itemize}
-    \item \texttt{com.unity.xr.arfoundation}
-    \item \texttt{com.unity.xr.arcore}
-    \item \texttt{com.unity.xr.management}
-    \item \texttt{com.unity.ugui}
-\end{itemize}
-
-% ------------------------------------------------------------
-\section{Testing and Debugging}
-% ------------------------------------------------------------
-
-Console logs use consistent prefixes:
-
-\begin{itemize}
-    \item \texttt{[AirportMapLoader]}
-    \item \texttt{[PathfindingService]}
-    \item \texttt{[AirportGraph]}
-    \item \texttt{[ARNavigationManager]}
-    \item \texttt{[ChatbotManager]}
-\end{itemize}
-
-Recommended manual tests:
+\subsection{iOS (Primary Demo Target)}
 
 \begin{enumerate}
-    \item Load default map on startup.
-    \item Navigate from Entrance to Gate A1.
-    \item Close \texttt{checkin\_security} and verify reroute.
-    \item Ask chatbot about cafe and compliance.
-    \item Reset map to default.
+    \item Unity Hub: \textbf{2022.3.62f3} + iOS Build Support (\texttt{scripts/install\_ios\_module.sh} if missing).
+    \item \textbf{Airport AR → Fix XR Plug-in Management} (ARKit on iOS tab).
+    \item Build $\rightarrow$ Xcode $\rightarrow$ sign with Apple ID $\rightarrow$ deploy to iPhone.
+    \item Grant Camera permission; raise media volume; disable silent mode for audio demo.
 \end{enumerate}
 
-See \texttt{TESTING.md} in the repository for a full checklist.
+See \texttt{IOS\_AR\_TESTING.md} for troubleshooting (Xcode, Speech framework, actool).
 
-% ------------------------------------------------------------
-\section{Future Production Path (Technical View)}
-% ------------------------------------------------------------
+\subsection{Android}
 
-The MVP intentionally separates \textbf{data} from \textbf{logic}:
+ARCore configuration via \texttt{AndroidARProjectConfigurator}. See \texttt{ANDROID\_AR\_TESTING.md}.
+
+\subsection{Editor}
+
+Press Play in \texttt{MainScene} --- UI and FAQ work; camera and native audio simulate with on-screen text only.
+
+\section{Testing Checklist (Jury / QA)}
 
 \begin{enumerate}
-    \item Replace \texttt{demo\_airport\_map.json} with authorized indoor map data using the same schema.
-    \item Keep loader, graph, and pathfinding modules unchanged.
-    \item Replace editor fallback visualization with real indoor positioning (beacons, SLAM, or VPS).
-    \item Connect staff editor to a secured backend instead of local JSON files.
-    \item Upgrade chatbot from keyword rules to approved airport knowledge sources.
+    \item Main menu shows logo and three modules.
+    \item Discover: camera live on device; first tap shows welcome bubble + three lines.
+    \item Gyro: rotate left/right filters lines.
+    \item Voice: each hint plays Romanian audio (check Xcode log for \texttt{started=1}).
+    \item FAQ: suggested questions return answers; chat resets after 8 messages.
+    \item About: disclaimer visible.
+    \item Back navigation returns to menu; camera stops when leaving Discover.
 \end{enumerate}
 
-This allows the hackathon prototype to evolve into a compliant production system without rewriting the navigation core.
+\section{Technical Differentiators for Jury}
 
-% ------------------------------------------------------------
+\begin{techbox}
+\begin{enumerate}[noitemsep]
+    \item \textbf{Multimodal Discover stack} --- camera + gyro UI + native audio + text bubble (four output channels).
+    \item \textbf{Native iOS plugin} --- custom \texttt{.mm} bridge solving AVAudioSession + IL2CPP marshaling.
+    \item \textbf{AR Foundation ready} --- not a mockup video; real ARKit integration in codebase.
+    \item \textbf{Graph pathfinding module} --- Dijkstra on editable JSON graph (staff reroute story).
+    \item \textbf{Zero-API FAQ} --- reliable demo without network dependency.
+    \item \textbf{Programmatic UI bootstrap} --- reproducible builds, easy team onboarding.
+    \item \textbf{Editor DevOps} --- automated platform setup, plist post-processing, validators.
+\end{enumerate}
+\end{techbox}
+
+\section{Future Production Path}
+
+\begin{enumerate}
+    \item Replace orientative Discover hints with VPS/beacon-anchored directions on authorized floor plans.
+    \item Enable \texttt{DiscoverFloorArrowGuide} plane raycasts for AR floor arrows.
+    \item Connect \texttt{PathfindingService} to live staff corridor API.
+    \item Upgrade FAQ to approved CMS / LLM with airport-supervised content only.
+    \item Unify TTS via \texttt{IosSpeechBridge} once audio session strategy is unified with AR camera.
+\end{enumerate}
+
 \section{Technical Conclusion}
-% ------------------------------------------------------------
 
-The \emph{Iași Airport AR Guide --- Demo} demonstrates how AR indoor navigation could support passengers during airport reconstruction while respecting strict data compliance requirements. The implementation is modular, offline-friendly, and hackathon-ready:
+The Iași Airport Digital Guide MVP is architected as a \textbf{layered, offline-capable mobile product}---not a single-scene hack. The hackathon build focuses on Discover + FAQ for maximum demo impact; AR Foundation, graph navigation, and native speech bridges prove the team's ability to deliver production-grade airport software incrementally.
 
-\begin{itemize}
-    \item fictional graph-based map data,
-    \item Dijkstra route planning with dynamic edge blocking,
-    \item AR and editor visualization paths,
-    \item bilingual rule-based chatbot,
-    \item staff-controlled map updates,
-    \item guided tour and compliance messaging.
-\end{itemize}
+For code review, start at \texttt{DemoAppBootstrap.BuildDiscoverPanel} and trace one tap through \texttt{DiscoverVoiceAssistant} to \texttt{IosDiscoverAudio.mm}---that path showcases our strongest engineering story.
 
-Colleagues joining the project should start by opening the scene, pressing Play, and tracing one navigation request from UI selection through \texttt{PathfindingService} to arrow spawning. That single end-to-end path provides the best mental model for the rest of the codebase.
-
-% ============================================================
 \appendix
-\section{Default Demo Connections}
-% ============================================================
+
+\section{Discover Speech Asset Map}
 
 \begin{table}[H]
 \centering
-\caption{Connections in the default demo map}
-\small
-\begin{tabular}{@{}lllrr@{}}
+\begin{tabular}{@{}lll@{}}
 \toprule
-\textbf{ID} & \textbf{From} & \textbf{To} & \textbf{Dist.} & \textbf{Status} \\
+\textbf{Speech ID} & \textbf{File} & \textbf{Trigger} \\
 \midrule
-\texttt{entrance\_info} & entrance & info & 5 & open \\
-\texttt{info\_checkin} & info & checkin & 7 & open \\
-\texttt{checkin\_security} & checkin & security & 6 & open \\
-\texttt{security\_gate\_a1} & security & gate\_a1 & 8 & open \\
-\texttt{security\_gate\_a2} & security & gate\_a2 & 9 & open \\
-\texttt{checkin\_cafe} & checkin & cafe & 8 & open \\
-\texttt{cafe\_toilets} & cafe & toilets & 6 & open \\
-\texttt{toilets\_gate\_a1} & toilets & gate\_a1 & 10 & open \\
-\texttt{gate\_a1\_baggage} & gate\_a1 & baggage & 8 & open \\
-\texttt{gate\_a2\_baggage} & gate\_a2 & baggage & 8 & open \\
-\texttt{baggage\_exit\_taxi} & baggage & exit\_taxi & 8 & open \\
-\texttt{info\_toilets} & info & toilets & 12 & open \\
+\texttt{Welcome} & \texttt{welcome.wav} & First overlay show \\
+\texttt{Forward} & \texttt{forward.wav} & Check-in hint tap \\
+\texttt{Left} & \texttt{left.wav} & Security hint tap \\
+\texttt{Right} & \texttt{right.wav} & Ciambella hint tap \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1030,12 +698,12 @@ Colleagues joining the project should start by opening the scene, pressing Play,
 \section{Glossary}
 
 \begin{description}
-    \item[MVP] Minimum Viable Product --- functional prototype, not production-ready.
-    \item[AR Foundation] Unity package for cross-platform AR features.
-    \item[ARCore] Google's AR platform for Android.
-    \item[Zone] A public location node in the simulated graph.
-    \item[Connection] An edge representing a walkable path between two zones.
-    \item[Editor Fallback] Non-AR visualization mode for Unity Editor demos.
+    \item[Discover mode] Camera-based passenger orientation with gyro-filtered direction UI and voice guidance.
+    \item[AR Foundation] Unity cross-platform AR framework (ARKit / ARCore).
+    \item[StreamingAssets] Unity folder whose files are copied verbatim to the device bundle (\texttt{Data/Raw/} on iOS).
+    \item[IL2CPP] Unity scripting backend used for iOS release builds; requires explicit UTF-8 marshaling to native plugins.
+    \item[Demo Airport Layout] Fictional JSON graph for compliance-safe routing demos.
+    \item[UiTheme] Central branding helper for consistent hackathon-quality UI.
 \end{description}
 
 \end{document}

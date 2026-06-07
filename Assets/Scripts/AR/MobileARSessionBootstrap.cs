@@ -30,6 +30,17 @@ namespace AirportAR.AR
         public bool IsARActive { get; private set; }
         public bool IsRoutePlaced { get; private set; }
 
+        public bool IsTracking =>
+            IsARActive && ARSession.state == ARSessionState.SessionTracking;
+
+        public int DetectedPlaneCount =>
+            PlaneManager != null ? PlaneManager.trackables.count : 0;
+
+        public event System.Action<bool> TrackingChanged;
+        public event System.Action PlanesDetected;
+
+        static Material planeMaterial;
+
         static readonly List<ARRaycastHit> RaycastHits = new List<ARRaycastHit>();
 
         void Awake()
@@ -87,7 +98,9 @@ namespace AirportAR.AR
 
             cameraGo.AddComponent<AudioListener>();
             CameraManager = cameraGo.AddComponent<ARCameraManager>();
+            CameraManager.requestedFacingDirection = CameraFacingDirection.World;
             CameraBackground = cameraGo.AddComponent<ARCameraBackground>();
+            CameraBackground.useCustomMaterial = false;
 
             Origin.CameraFloorOffsetObject = cameraOffset;
             Origin.Camera = ARCamera;
@@ -100,7 +113,19 @@ namespace AirportAR.AR
             sessionGo.SetActive(false);
 
             IsSessionCreated = true;
+            ARSession.stateChanged += OnArSessionStateChanged;
             Debug.Log("[MobileARSessionBootstrap] AR hierarchy created.");
+        }
+
+        void OnDestroy()
+        {
+            ARSession.stateChanged -= OnArSessionStateChanged;
+        }
+
+        void OnArSessionStateChanged(ARSessionStateChangedEventArgs args)
+        {
+            Debug.Log($"[MobileARSessionBootstrap] ARSession state: {args.state}");
+            TrackingChanged?.Invoke(args.state == ARSessionState.SessionTracking);
         }
 
         public void SetARActive(bool active)
@@ -113,16 +138,13 @@ namespace AirportAR.AR
 
             if (active)
             {
+                Session.gameObject.SetActive(true);
                 EnsureXrStarted();
-            }
+                Origin.gameObject.SetActive(true);
+                IsARActive = true;
 
-            IsARActive = active;
-            Origin.gameObject.SetActive(active);
-            Session.gameObject.SetActive(active);
-
-            if (active)
-            {
                 DisableFallbackCameras();
+
                 if (CameraBackground != null)
                 {
                     CameraBackground.enabled = true;
@@ -132,6 +154,29 @@ namespace AirportAR.AR
                 {
                     CameraManager.enabled = true;
                 }
+
+                if (ARCamera != null)
+                {
+                    ARCamera.enabled = true;
+                    ARCamera.clearFlags = CameraClearFlags.SolidColor;
+                }
+            }
+            else
+            {
+                IsARActive = false;
+
+                if (CameraBackground != null)
+                {
+                    CameraBackground.enabled = false;
+                }
+
+                if (CameraManager != null)
+                {
+                    CameraManager.enabled = false;
+                }
+
+                Origin.gameObject.SetActive(false);
+                Session.gameObject.SetActive(false);
             }
 
             Debug.Log($"[MobileARSessionBootstrap] AR active: {active}, session state: {ARSession.state}");
@@ -181,6 +226,111 @@ namespace AirportAR.AR
             {
                 ARCamera.enabled = true;
             }
+        }
+
+        public bool TryRaycastHorizontalPlane(Vector2 screenPoint, out Pose pose)
+        {
+            pose = default;
+            if (!IsARActive || RaycastManager == null)
+            {
+                return false;
+            }
+
+            RaycastHits.Clear();
+            if (RaycastManager.Raycast(screenPoint, RaycastHits, TrackableType.PlaneWithinPolygon))
+            {
+                pose = RaycastHits[0].pose;
+                return true;
+            }
+
+            RaycastHits.Clear();
+            if (RaycastManager.Raycast(screenPoint, RaycastHits, TrackableType.PlaneEstimated))
+            {
+                pose = RaycastHits[0].pose;
+                return true;
+            }
+
+            return false;
+        }
+
+        public void SetPlaneDetectionEnabled(bool enabled)
+        {
+            if (PlaneManager == null)
+            {
+                return;
+            }
+
+            PlaneManager.planesChanged -= OnPlanesChanged;
+
+            if (enabled)
+            {
+                PlaneManager.requestedDetectionMode = PlaneDetectionMode.Horizontal;
+                PlaneManager.planesChanged += OnPlanesChanged;
+                PlaneManager.enabled = true;
+            }
+            else
+            {
+                PlaneManager.enabled = false;
+            }
+        }
+
+        void OnPlanesChanged(ARPlanesChangedEventArgs args)
+        {
+            StylePlaneVisuals(args.added);
+            StylePlaneVisuals(args.updated);
+
+            if (DetectedPlaneCount > 0)
+            {
+                PlanesDetected?.Invoke();
+            }
+        }
+
+        static void StylePlaneVisuals(System.Collections.Generic.IEnumerable<ARPlane> planes)
+        {
+            EnsurePlaneMaterial();
+
+            foreach (ARPlane plane in planes)
+            {
+                if (plane == null)
+                {
+                    continue;
+                }
+
+                foreach (Renderer renderer in plane.GetComponentsInChildren<Renderer>(true))
+                {
+                    renderer.enabled = true;
+                    renderer.material = planeMaterial;
+                }
+
+                ARPlaneMeshVisualizer visualizer = plane.GetComponent<ARPlaneMeshVisualizer>();
+                if (visualizer != null)
+                {
+                    visualizer.enabled = true;
+                }
+            }
+        }
+
+        static void EnsurePlaneMaterial()
+        {
+            if (planeMaterial != null)
+            {
+                return;
+            }
+
+            planeMaterial = new Material(Shader.Find("Standard"));
+            if (planeMaterial.shader == null || planeMaterial.shader.name == "Hidden/InternalErrorShader")
+            {
+                planeMaterial = new Material(Shader.Find("Unlit/Color"));
+            }
+
+            Color green = new Color(0.55f, 0.78f, 0.15f, 0.35f);
+            planeMaterial.color = green;
+            if (planeMaterial.HasProperty("_Color"))
+            {
+                planeMaterial.SetColor("_Color", green);
+            }
+
+            planeMaterial.renderQueue = 3000;
         }
 
         public bool TryPlaceRouteAnchor(Vector2 screenPosition)
